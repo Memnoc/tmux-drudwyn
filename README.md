@@ -1,13 +1,36 @@
-# tmux-agent-watch
+<h1 align="center">tmux-agent-watch</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <strong>Every coding agent. Every workspace. One tmux view.</strong><br>
+  See who needs you, jump into their workspace, and finish work safely.
+</p>
 
-Interact with every coding agent that needs you across tmux sessions, projects, and Git
-worktrees without leaving your terminal or replacing your tmux workflow.
+<p align="center">
+  <img src="docs/images/design/hero-workflow.png" width="100%" alt="From projects and agents to a live status bar, workspace navigation, and safe worktree cleanup—all inside tmux.">
+</p>
 
-`tmux-agent-watch` recognizes Codex, Claude Code, and OpenCode. It adds
-content-blind lifecycle state, Git context, navigation, and guarded worktree
-actions to tmux.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-c4a7e7" alt="License: MIT"></a>
+  <a href="Cargo.toml"><img src="https://img.shields.io/badge/built_with-Rust-ebbcba" alt="Built with Rust"></a>
+  <a href="#install"><img src="https://img.shields.io/badge/platforms-Linux_%C2%B7_macOS-9ccfd8" alt="Platforms: Linux and macOS"></a>
+</p>
+
+<p align="center">
+  <a href="#install"><strong>Install</strong></a> ·
+  <a href="#how-it-works">Overview</a> ·
+  <a href="#use">Shortcuts</a> ·
+  <a href="#agent-integrations">Agents</a> ·
+  <a href="#configure">Configure</a> ·
+  <a href="#session-persistence">Session saving</a> ·
+  <a href="docs/privacy.md">Privacy</a>
+</p>
+
+<p align="center">
+  Works with <strong>Codex · Claude Code · OpenCode</strong><br>
+  Live agent state and Git context across tmux sessions, projects, and worktrees.
+</p>
+
+---
 
 ## Install
 
@@ -45,9 +68,7 @@ still be started normally; no special launcher is required.
 
 ## How it works
 
-The idea is to have a constant overview of what is happening, what actions are needed and where.
-
-<img src="docs/images/design/hero-workflow.png" alt="Diagram: many projects and agents feed a content-blind status bar, which feeds the Workspace Navigator and Cockpit, which finish work safely back to a clean, merged worktree">
+See what is running, what needs attention, and where to act without leaving tmux.
 
 | Surface             | What it answers                               | Open it        |
 | ------------------- | --------------------------------------------- | -------------- |
