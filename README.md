@@ -1,5 +1,6 @@
 <p align="center">
   <img src="docs/images/brand/drudwyn-logo-v3.png" width="120" alt="Drudwyn: an attentive hound in a pastel-edged badge.">
+  <br><sub>AI-generated logo · <a href="assets/brand/README.md">Artwork provenance</a></sub>
 </p>
 
 <h1 align="center">Drudwyn</h1>
@@ -40,6 +41,19 @@
 You need tmux with popup support, Git, Bash, and a supported agent installed.
 This checkout uses the v2 Rust implementation; building it requires Rust and Cargo.
 `prefix` means your tmux prefix key—normally `Ctrl+b`, followed by the indicated key.
+
+**Fonts:** Drudwyn prefers Nerd Font symbols and its hound icon by default.
+For that appearance, select a [Nerd Font](https://www.nerdfonts.com/) in your
+terminal and install the bundled [Drudwyn Symbols font](assets/brand/DrudwynSymbols-Regular.ttf).
+Restart your terminal after installing it. The font must be installed on the
+machine displaying the terminal, including when you connect over SSH.
+
+Automatic mode checks local fonts with Fontconfig (`fc-list`): **hound → bot
+if the hound font is missing → `A` if Nerd Font support is missing or unknown**.
+It cannot verify the active terminal's font or a remote client's fonts.
+Without Fontconfig (including many macOS setups), or over detected SSH sessions,
+it uses `A`; after verifying your fonts, select `nerd` and `hound` explicitly.
+[Font installation, overrides, and troubleshooting](docs/configuration.md#icons-and-font-fallback).
 
 **1. Add the plugin.** With [TPM](https://github.com/tmux-plugins/tpm), add this to `~/.tmux.conf` before TPM is loaded:
 
@@ -113,6 +127,8 @@ hooks provide exact state transitions. [Set up your agent](docs/agents.md).
 
 Choose an agent, theme, base branch, or custom shortcut in `~/.tmux.conf`.
 Defaults work without extra configuration. [Configuration reference](docs/configuration.md).
+
+Prefer the bot? Add `set -g @drudwyn-agent-icon bot` to `~/.tmux.conf`.
 
 ## Session persistence
 

@@ -75,7 +75,7 @@ tmux bind-key "$(option @drudwyn-help-key H)" display-popup -E -w 72 -h 24 \
 if [ "$(option @drudwyn-v2 on)" = on ]; then
   tmux bind-key "$(option @drudwyn-worktree-key W)" display-popup -EE -w 96 -h 20 \
     -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/v2.sh cockpit --start"
-  tmux bind-key "$(option @drudwyn-cockpit-key P)" display-popup -EE -w 96 -h 20 \
+  tmux bind-key "$(option @drudwyn-cockpit-key P)" display-popup -EE -w 96 -h 28 \
     -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/v2.sh cockpit"
 else
   tmux bind-key "$(option @drudwyn-worktree-key W)" command-prompt -p 'Branch:' \

@@ -27,6 +27,10 @@ socket_path="$(tmux -L "$SOCKET" display-message -p '#{socket_path}')"
 server_pid="$(tmux -L "$SOCKET" display-message -p '#{pid}')"
 export TMUX="$socket_path,$server_pid,0"
 
+tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode safe
+git init -q -b main "$TMP_DIR/example-project"
+git -C "$TMP_DIR/example-project" -c user.name=Test -c user.email=test@example.invalid commit -qm initial --allow-empty
+tmux -L "$SOCKET" set-option -wq -t "$codex_window" @drudwyn_context_repo "$TMP_DIR/example-project"
 safe="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
 printf '%s' "$safe" | grep -Fq '#[align=left]'
 printf '%s' "$safe" | grep -Fq '#[align=centre]'
@@ -42,6 +46,7 @@ fi
 printf 'ok: safe bar groups windows, signals overflow, and excludes content\n'
 
 tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode nerd
+tmux -L "$SOCKET" set-option -g @drudwyn-agent-icon bot
 nerd="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
 printf '%s' "$nerd" | grep -Fq '▶'
 printf '%s' "$nerd" | grep -Fq '󰚩'
@@ -51,9 +56,24 @@ if printf '%s' "$nerd" | grep -Eq '|'; then
 fi
 printf 'ok: Nerd mode renders the selected-agent and overflow vocabulary\n'
 
+tmux -L "$SOCKET" set-option -g @drudwyn-agent-icon '󰀀'
+hound="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
+printf '%s' "$hound" | grep -Fq '󰀀'
+if printf '%s' "$hound" | grep -Fq '󰚩'; then
+  printf 'not ok: custom agent icon left bot icons in the bar\n'; exit 1
+fi
+tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode safe
+safe_custom="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
+if printf '%s' "$safe_custom" | grep -Fq '󰀀'; then
+  printf 'not ok: safe mode emitted the custom font glyph\n'; exit 1
+fi
+tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode nerd
+tmux -L "$SOCKET" set-option -g @drudwyn-agent-icon bot
+printf 'ok: custom hound replaces bots while safe mode stays font-independent\n'
+
 narrow="$($ROOT/scripts/status-bar.sh bar "$codex_window" 72)"
 printf '%s' "$narrow" | grep -Fq '󰁔'
-printf '%s' "$narrow" | grep -Fq 'tmux-agent-wat'
+printf '%s' "$narrow" | grep -Fq 'example-proje'
 printf '%s' "$narrow" | grep -Fq 'WORK'
 if printf '%s' "$narrow" | grep -Fq 'northstar'; then
   printf 'not ok: narrow bar retained verbose inactive workspace labels\n'; exit 1

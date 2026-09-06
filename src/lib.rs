@@ -1,8 +1,10 @@
 pub mod ambient;
+mod brand;
 pub mod cockpit;
 pub mod config;
 pub mod discovery;
 pub mod domain;
+mod icons;
 pub mod lifecycle;
 pub mod navigator;
 mod persistence;

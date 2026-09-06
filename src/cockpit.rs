@@ -51,7 +51,7 @@ pub struct App {
     start_error: Option<String>,
     finishing: bool,
     git_diffs: HashMap<PathBuf, GitDiff>,
-    nerd_icons: bool,
+    agent_icon: String,
     config: Config,
     theme: Theme,
 }
@@ -85,7 +85,7 @@ impl App {
                 .unwrap_or(0),
             finishing: false,
             git_diffs,
-            nerd_icons: false,
+            agent_icon: "A".into(),
             config,
             theme: Theme::rose_pine(variant),
         }
@@ -200,12 +200,7 @@ pub fn run(variant: Variant, start: bool) -> Result<(), CockpitError> {
     if start {
         app.begin_start();
     }
-    app.nerd_icons = Command::new("tmux")
-        .args(["show-option", "-gqv", "@drudwyn-icon-mode"])
-        .output()
-        .is_ok_and(|output| {
-            output.status.success() && String::from_utf8_lossy(&output.stdout).trim() == "nerd"
-        });
+    app.agent_icon = crate::icons::agent_icon();
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -362,7 +357,11 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),
+            Constraint::Length(if area.width >= 70 && area.height >= 24 {
+                9
+            } else {
+                3
+            }),
             Constraint::Min(5),
             Constraint::Length(4),
         ])
@@ -506,6 +505,36 @@ fn render_header(frame: &mut ratatui::Frame<'_>, app: &App, area: Rect) {
         .iter()
         .filter(|workspace| workspace.lifecycle.needs_attention())
         .count();
+    if area.height >= 9 {
+        frame.render_widget(Block::default().borders(Borders::BOTTOM), area);
+        crate::brand::render(
+            frame,
+            Rect::new(area.x + 1, area.y, 16, 8),
+            // A dark tile keeps the white artwork visible in the Dawn theme too.
+            ratatui::style::Color::Rgb(35, 33, 54),
+        );
+        frame.render_widget(
+            Paragraph::new(vec![
+                Line::from(Span::styled(
+                    "Drudwyn",
+                    Style::default()
+                        .fg(app.theme.rose)
+                        .add_modifier(Modifier::BOLD),
+                )),
+                Line::from("WORKSPACE COCKPIT"),
+                Line::from(Span::styled(
+                    format!(
+                        "{} live · {} need attention",
+                        app.workspaces.len(),
+                        attention
+                    ),
+                    Style::default().fg(app.theme.muted),
+                )),
+            ]),
+            Rect::new(area.x + 19, area.y + 2, area.width.saturating_sub(19), 4),
+        );
+        return;
+    }
     let title = Line::from(vec![
         Span::styled(
             " WORKSPACE COCKPIT ",
@@ -628,11 +657,7 @@ fn render_detail(frame: &mut ratatui::Frame<'_>, app: &App, area: Rect) {
     let mut lines = vec![
         Line::from(vec![
             Span::styled(
-                format!(
-                    " {} {} ",
-                    if app.nerd_icons { "󰚩" } else { "A" },
-                    workspace.agent.label()
-                ),
+                format!(" {} {} ", app.agent_icon.as_str(), workspace.agent.label()),
                 Style::default().fg(color).add_modifier(Modifier::BOLD),
             ),
             Span::styled(workspace.lifecycle.label(), Style::default().fg(color)),
