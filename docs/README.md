@@ -19,6 +19,7 @@ cockpit with `prefix + P`, then try the workspace navigator with `prefix + w`.
 
 ## Development and project background
 
+- [Update agenda](agenda.md): work planned for the next update.
 - [README standard](readme-style.md): reusable layout and authoring skill.
 - [Contributing](../CONTRIBUTING.md): setup, repository map, and checks.
 - [Domain context](../CONTEXT.md): workspace and lifecycle terminology.
