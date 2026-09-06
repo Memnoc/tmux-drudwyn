@@ -48,7 +48,7 @@ pub struct App {
     start_agent: usize,
     finishing: bool,
     git_diffs: HashMap<PathBuf, GitDiff>,
-    nerd_icons: bool,
+    agent_icon: String,
     config: Config,
     theme: Theme,
 }
@@ -79,7 +79,7 @@ impl App {
                 .unwrap_or(0),
             finishing: false,
             git_diffs,
-            nerd_icons: false,
+            agent_icon: "A".into(),
             config,
             theme: Theme::rose_pine(variant),
         }
@@ -171,12 +171,7 @@ impl App {
 pub fn run(variant: Variant) -> Result<(), CockpitError> {
     let config = Config::load_tmux().map_err(|error| io::Error::other(error.to_string()))?;
     let mut app = App::new(discovery::discover()?, variant, config);
-    app.nerd_icons = Command::new("tmux")
-        .args(["show-option", "-gqv", "@drudwyn-icon-mode"])
-        .output()
-        .is_ok_and(|output| {
-            output.status.success() && String::from_utf8_lossy(&output.stdout).trim() == "nerd"
-        });
+    app.agent_icon = crate::icons::agent_icon();
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -603,11 +598,7 @@ fn render_detail(frame: &mut ratatui::Frame<'_>, app: &App, area: Rect) {
     let mut lines = vec![
         Line::from(vec![
             Span::styled(
-                format!(
-                    " {} {} ",
-                    if app.nerd_icons { "󰚩" } else { "A" },
-                    workspace.agent.label()
-                ),
+                format!(" {} {} ", app.agent_icon.as_str(), workspace.agent.label()),
                 Style::default().fg(color).add_modifier(Modifier::BOLD),
             ),
             Span::styled(workspace.lifecycle.label(), Style::default().fg(color)),

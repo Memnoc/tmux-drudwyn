@@ -39,17 +39,11 @@ Install it using your OS font installer. On Linux, copy it into
 terminal so it discovers the font. If font fallback does not select it, map
 `U+F0000` to `Drudwyn Symbols` in your terminal's font settings.
 
-With Nerd Font mode enabled, try the icon in the running tmux server:
-
-```sh
-tmux set-option -g @drudwyn-agent-icon "$(printf '\\U000f0000')"
-tmux refresh-client -S
-```
-
-If it displays as a missing-glyph box, restore the default bot with
-`tmux set-option -gu @drudwyn-agent-icon`. Safe icon mode always uses ASCII.
-To keep the hound after restarting tmux, save the option and glyph in
-`~/.tmux.conf` after confirming your terminal renders it correctly.
+Drudwyn now prefers this glyph automatically when local Nerd Font and hound
+font support are detected. The status bar, navigator, and cockpit details share
+this preference. Set `@drudwyn-agent-icon bot` to opt out of the hound.
+See [icon settings and detection limits](../../docs/configuration.md#icons-and-font-fallback)
+for automatic fallback, explicit overrides, SSH, and systems without Fontconfig.
 
 Rebuild the font with `python3 tooling/fonts/build-drudwyn-font.py` using
 fonttools 4.64.0 and Pillow 12.3.0. The script reads the source PNG without

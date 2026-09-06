@@ -50,7 +50,7 @@ struct App {
     pending_kill: Option<Window>,
     pending_rename: Option<(String, String)>,
     notice: Option<String>,
-    nerd_icons: bool,
+    agent_icon: String,
     theme: Theme,
 }
 
@@ -185,8 +185,7 @@ fn handle_key(app: &mut App, code: KeyCode) -> NavigationAction {
 
 pub fn run(variant: Variant) -> io::Result<()> {
     let current = tmux_output(&["display-message", "-p", "#{window_id}"])?;
-    let nerd_icons = tmux_output(&["show-option", "-gqv", "@drudwyn-icon-mode"])
-        .is_ok_and(|value| value == "nerd");
+    let agent_icon = crate::icons::agent_icon();
     let windows = discover()?;
     let selected = windows
         .iter()
@@ -201,7 +200,7 @@ pub fn run(variant: Variant) -> io::Result<()> {
         pending_kill: None,
         pending_rename: None,
         notice: None,
-        nerd_icons,
+        agent_icon,
         theme: Theme::rose_pine(variant),
     };
     enable_raw_mode()?;
@@ -380,7 +379,7 @@ fn render_group(frame: &mut ratatui::Frame<'_>, app: &App, area: Rect, agents: b
         let branch = item.branch.as_deref().unwrap_or("");
         if agents {
             let color = state_color(item.lifecycle, app.theme);
-            let agent_icon = if app.nerd_icons { "󰚩" } else { "A" };
+            let agent_icon = app.agent_icon.as_str();
             ListItem::new(Line::from(vec![
                 Span::styled(
                     format!(
@@ -552,7 +551,7 @@ mod tests {
             pending_kill: None,
             pending_rename: None,
             notice: None,
-            nerd_icons: true,
+            agent_icon: "󰀀".into(),
             theme: Theme::rose_pine(Variant::Moon),
         };
 
@@ -569,7 +568,7 @@ mod tests {
             pending_kill: None,
             pending_rename: None,
             notice: None,
-            nerd_icons: false,
+            agent_icon: "A".into(),
             theme: Theme::rose_pine(Variant::Moon),
         }
     }

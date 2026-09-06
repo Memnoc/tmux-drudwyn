@@ -27,6 +27,7 @@ socket_path="$(tmux -L "$SOCKET" display-message -p '#{socket_path}')"
 server_pid="$(tmux -L "$SOCKET" display-message -p '#{pid}')"
 export TMUX="$socket_path,$server_pid,0"
 
+tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode safe
 safe="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
 printf '%s' "$safe" | grep -Fq '#[align=left]'
 printf '%s' "$safe" | grep -Fq '#[align=centre]'
@@ -42,6 +43,7 @@ fi
 printf 'ok: safe bar groups windows, signals overflow, and excludes content\n'
 
 tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode nerd
+tmux -L "$SOCKET" set-option -g @drudwyn-agent-icon bot
 nerd="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
 printf '%s' "$nerd" | grep -Fq '▶'
 printf '%s' "$nerd" | grep -Fq '󰚩'
@@ -63,7 +65,7 @@ if printf '%s' "$safe_custom" | grep -Fq '󰀀'; then
   printf 'not ok: safe mode emitted the custom font glyph\n'; exit 1
 fi
 tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode nerd
-tmux -L "$SOCKET" set-option -gu @drudwyn-agent-icon
+tmux -L "$SOCKET" set-option -g @drudwyn-agent-icon bot
 printf 'ok: custom hound replaces bots while safe mode stays font-independent\n'
 
 narrow="$($ROOT/scripts/status-bar.sh bar "$codex_window" 72)"

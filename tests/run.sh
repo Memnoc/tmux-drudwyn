@@ -5,6 +5,7 @@ ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
 
 bash -n "$ROOT/tmux-drudwyn.tmux" "$ROOT"/scripts/*.sh "$ROOT"/tests/*.sh
 bash "$ROOT/tests/rename_test.sh"
+bash "$ROOT/tests/icons_test.sh"
 "$ROOT/tests/classify_test.sh"
 "$ROOT/tests/help_test.sh"
 "$ROOT/tests/status_bar_test.sh"

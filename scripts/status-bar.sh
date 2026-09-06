@@ -8,7 +8,10 @@ set -eu
 session="${1:-}"
 current="${2:-}"
 width="${3:-120}"
-icon_mode="$(tmux show-option -gqv @drudwyn-icon-mode 2>/dev/null || true)"
+PLUGIN_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
+icons="$(bash "$PLUGIN_DIR/scripts/icons.sh")"
+icon_mode="${icons%%$'\n'*}"
+agent_icon="${icons#*$'\n'}"
 theme="$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)"
 
 case "${theme:-moon}" in
@@ -18,9 +21,6 @@ case "${theme:-moon}" in
 esac
 
 if [ "$icon_mode" = nerd ]; then
-  agent_icon='󰚩'
-  custom_agent_icon="$(tmux show-option -gqv @drudwyn-agent-icon 2>/dev/null || true)"
-  [ -z "$custom_agent_icon" ] || agent_icon="$custom_agent_icon"
   branch_icon=''
   more_icon='󰁔'
 else
