@@ -1,8 +1,8 @@
-<h1 align="center">tmux-agent-watch</h1>
+<h1 align="center">Drudwyn</h1>
 
 <p align="center">
-  <strong>Every coding agent. Every workspace. One tmux view.</strong><br>
-  See who needs you, jump into their workspace, and finish work safely.
+  <strong>Keep every agent within reach.</strong><br>
+  A tmux plugin for navigating coding agents, tracking workspaces, and finishing work safely.
 </p>
 
 <p align="center">
