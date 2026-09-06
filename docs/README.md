@@ -1,0 +1,25 @@
+# Documentation
+
+[Project home](../README.md)
+
+## Start here
+
+| I want to… | Read |
+| --- | --- |
+| Install the plugin or update an existing checkout | [Installation and updates](installation.md) |
+| Navigate agents, manage worktrees, or save sessions | [Daily use](usage.md) |
+| Connect agent lifecycle hooks | [Agent integrations](agents.md) |
+| Change themes, shortcuts, or defaults | [Configuration](configuration.md) |
+| Fix a missing binary, stale state, or shortcut conflict | [Troubleshooting](troubleshooting.md) |
+| Understand what data the plugin uses | [Privacy and local data flow](privacy.md) |
+
+For a first run, follow the [README quickstart](../README.md#install), open the
+cockpit with `prefix + P`, then try the workspace navigator with `prefix + w`.
+
+## Development and project background
+
+- [Contributing](../CONTRIBUTING.md): setup, repository map, and checks.
+- [Domain context](../CONTEXT.md): workspace and lifecycle terminology.
+- [Architecture decisions](adr/README.md): why the project is structured this way.
+- [Release preflight](preflight-checklist.md): build and acceptance checklist.
+- [Compliance record](compliance/tmux-agent-watch-v2.md) and [research notes](research/): supporting project records.
