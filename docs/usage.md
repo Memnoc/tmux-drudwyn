@@ -32,7 +32,7 @@ implementation never reads prompts, responses, or terminal scrollback.
 
 Use the session navigator to find a session, the workspace navigator to find a window, and the cockpit to act on a workspace.
 
-<img src="images/navigator-cockpit-surfaces.png" alt="Comparison of three complementary tmux-agent-watch surfaces: the Session Navigator for switching tmux sessions, the Workspace Navigator for finding windows and agents across sessions, and the Workspace Cockpit for starting, reviewing, opening, and finishing agent work">
+<img src="images/navigator-cockpit-surfaces.png" alt="Comparison of three complementary tmux-drudwyn surfaces: the Session Navigator for switching tmux sessions, the Workspace Navigator for finding windows and agents across sessions, and the Workspace Cockpit for starting, reviewing, opening, and finishing agent work">
 
 | Surface             | What you can do                                      | Use it when                                    |
 | ------------------- | ---------------------------------------------------- | ---------------------------------------------- |
@@ -117,7 +117,7 @@ scripts/worktree-remove.sh feature/auth
 ```
 
 Extra arguments after the branch are used as the exact agent command. Set
-`AGENT_WATCH_WORKTREE_ROOT` to change the worktree parent directory. Removal
+`DRUDWYN_WORKTREE_ROOT` to change the worktree parent directory. Removal
 refuses dirty worktrees and retains the branch.
 
 ## Session persistence
@@ -133,12 +133,12 @@ restore uses the updated layout. Kills do not automatically save; if killing the
 session hosting the popup closes it, reopen a navigator in a remaining session
 and save there.
 
-Resurrect's default global save shortcut is `prefix + Ctrl+s`. Agent Watch leaves
+Resurrect's default global save shortcut is `prefix + Ctrl+s`. Drudwyn leaves
 that key available and puts the native session tree on `prefix + Shift+s`.
 If upgrading from a version that used `Ctrl+s` for the native tree, reload your
 tmux configuration with Resurrect enabled to restore its save binding. Remove
-any explicit `@agent-watch-native-session-key C-s` override that would reclaim it.
+any explicit `@drudwyn-native-session-key C-s` override that would reclaim it.
 
-Saving requires `tmux-resurrect` to be loaded. Agent Watch delegates to its
+Saving requires `tmux-resurrect` to be loaded. Drudwyn delegates to its
 `@resurrect-save-script-path` and creates no separate snapshot. Resurrect controls
 what is saved, including pane contents if you enabled its capture option.

@@ -1,10 +1,10 @@
 [package]
-name = "tmux-agent-watch"
+name = "tmux-drudwyn"
 version = "2.0.0-alpha.1"
 edition = "2024"
 description = "A stateless, tmux-native supervisor for coding-agent workspaces"
 license = "MIT"
-repository = "https://github.com/Memnoc/tmux-agent-watch"
+repository = "https://github.com/Memnoc/tmux-drudwyn"
 
 [dependencies]
 clap = { version = "4.6.6", features = ["derive"] }

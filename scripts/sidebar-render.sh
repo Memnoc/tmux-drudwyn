@@ -94,9 +94,9 @@ while tmux has-session -t "$session" 2>/dev/null; do
   if [ "$(tmux display-message -p -t "$TMUX_PANE" '#{pane_in_mode}' 2>/dev/null || true)" = 1 ]; then
     tmux copy-mode -q -t "$TMUX_PANE" 2>/dev/null || true
   fi
-  expanded="$(tmux show-option -qv -t "$session" @agent_watch_sidebar_expanded 2>/dev/null || true)"
+  expanded="$(tmux show-option -qv -t "$session" @drudwyn_sidebar_expanded 2>/dev/null || true)"
   current_window="$(tmux display-message -p -t "$session:" '#{window_id}')"
-  rows="$(tmux list-windows -t "$session" -F '#{window_id}|#{window_name}|#{@agent_watch_state}|#{@agent_watch_since}|#{@agent_watch_message}|#{pane_current_path}|#{@agent_watch_branch}|#{@agent_watch_worktree}|#{@agent_watch_git_status}')"
+  rows="$(tmux list-windows -t "$session" -F '#{window_id}|#{window_name}|#{@drudwyn_state}|#{@drudwyn_since}|#{@drudwyn_message}|#{pane_current_path}|#{@drudwyn_branch}|#{@drudwyn_worktree}|#{@drudwyn_git_status}')"
   click_map=''
   row_number=0
 
@@ -174,7 +174,7 @@ while tmux has-session -t "$session" 2>/dev/null; do
 
   click_map="${frame##*$'\034'}"
   frame="${frame%$'\034'*}"
-  tmux set-option -pq -t "$TMUX_PANE" @agent_watch_click_map "$click_map"
+  tmux set-option -pq -t "$TMUX_PANE" @drudwyn_click_map "$click_map"
   if [ "$frame" != "$previous_frame" ]; then
     printf '\033[H\033[J%s' "$frame"
     previous_frame="$frame"

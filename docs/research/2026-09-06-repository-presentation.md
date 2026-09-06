@@ -5,7 +5,7 @@ Date: 2026-09-06
 This records the repository before the documentation restructure on `docs/readme-hero`.
 Descriptions of missing guides and index entries refer to that earlier state.
 
-Scope: Headroom's public README, documentation navigation, and contributor/security entry points compared with the current tmux-agent-watch checkout. This is a presentation review, not a code or security audit. Recommendations below are judgments about this smaller project's needs.
+Scope: Headroom's public README, documentation navigation, and contributor/security entry points compared with the current tmux-drudwyn checkout. This is a presentation review, not a code or security audit. Recommendations below are judgments about this smaller project's needs.
 
 ## Findings
 

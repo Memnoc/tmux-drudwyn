@@ -3,7 +3,7 @@
 set -eu
 
 ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
-SOCKET="agent-watch-cockpit-test-$$"
+SOCKET="drudwyn-cockpit-test-$$"
 TMP_DIR="$(mktemp -d)"
 REPO="$TMP_DIR/example"
 
@@ -23,11 +23,11 @@ git -C "$REPO" branch -M main
 cp "$(command -v cat)" "$TMP_DIR/codex"
 
 tmux -L "$SOCKET" -f /dev/null new-session -d -s cockpit -x 110 -y 32 -c "$REPO"
-tmux -L "$SOCKET" set-option -g @agent-watch-v2 off
+tmux -L "$SOCKET" set-option -g @drudwyn-v2 off
 socket_path="$(tmux -L "$SOCKET" display-message -p '#{socket_path}')"
 server_pid="$(tmux -L "$SOCKET" display-message -p '#{pid}')"
 tmux -L "$SOCKET" set-environment -g PATH "$TMP_DIR:$PATH"
-tmux -L "$SOCKET" run-shell "$ROOT/tmux-agent-watch.tmux"
+tmux -L "$SOCKET" run-shell "$ROOT/tmux-drudwyn.tmux"
 cockpit_pane="$(tmux -L "$SOCKET" new-window -d -P -F '#{pane_id}' -t cockpit: -c "$REPO" \
   "TMUX='$socket_path,$server_pid,0' '$ROOT/scripts/cockpit.sh'")"
 sleep 1
@@ -76,14 +76,14 @@ created="$TMP_DIR/example-worktrees/quick-win-add-version-command"
 [ -d "$created" ] && [ "$(git -C "$created" branch --show-current)" = quick-win/add-version-command ] || {
   printf 'not ok: Start did not create its linked worktree\n'; exit 1
 }
-created_window="$(tmux -L "$SOCKET" list-windows -a -F '#{window_id}|#{@agent_watch_worktree}' |
+created_window="$(tmux -L "$SOCKET" list-windows -a -F '#{window_id}|#{@drudwyn_worktree}' |
   awk -F '|' -v path="$created" '$2 == path { print $1; exit }')"
 [ -n "$created_window" ] || { printf 'not ok: Start did not create an agent window\n'; exit 1; }
 printf 'ok: Start creates a confirmed branch worktree and chosen agent window\n'
 
-tmux -L "$SOCKET" set-option -wq -t "$created_window" @agent_watch_state done
-tmux -L "$SOCKET" set-option -wq -t "$created_window" @agent_watch_message 'Version command ready for review'
-tmux -L "$SOCKET" set-option -wq -t "$created_window" @agent_watch_source hook
+tmux -L "$SOCKET" set-option -wq -t "$created_window" @drudwyn_state done
+tmux -L "$SOCKET" set-option -wq -t "$created_window" @drudwyn_message 'Version command ready for review'
+tmux -L "$SOCKET" set-option -wq -t "$created_window" @drudwyn_source hook
 cockpit_pane="$(tmux -L "$SOCKET" new-window -d -P -F '#{pane_id}' -t cockpit: -c "$REPO" \
   "TMUX='$socket_path,$server_pid,0' '$ROOT/scripts/cockpit.sh'")"
 sleep 0.2

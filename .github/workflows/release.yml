@@ -38,10 +38,10 @@ jobs:
       - name: Build locked release binary
         run: cargo build --locked --release --target '${{ matrix.target }}'
       - name: Package release archive
-        run: scripts/package-release.sh '${{ matrix.target }}' 'target/${{ matrix.target }}/release/tmux-agent-watch' dist
+        run: scripts/package-release.sh '${{ matrix.target }}' 'target/${{ matrix.target }}/release/tmux-drudwyn' dist
       - uses: actions/upload-artifact@v7
         with:
-          name: tmux-agent-watch-${{ matrix.target }}
+          name: tmux-drudwyn-${{ matrix.target }}
           path: dist/*.tar.gz
           if-no-files-found: error
           retention-days: 14
@@ -56,7 +56,7 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@v8
         with:
-          pattern: tmux-agent-watch-*
+          pattern: tmux-drudwyn-*
           path: dist
           merge-multiple: true
       - name: Verify artifact matrix and archive contents

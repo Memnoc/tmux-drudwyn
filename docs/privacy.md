@@ -1,15 +1,15 @@
 # Privacy and local data flow
 
-`tmux-agent-watch` is local-only supervisor software. The project operates no
+`tmux-drudwyn` is local-only supervisor software. The project operates no
 backend and receives no workspace data. It has no accounts, telemetry,
 analytics, crash uploader, update ping, remote feature flags, database, task
 history, or content cache.
 
 ## Version boundary
 
-The default Rust implementation (`@agent-watch-v2 on`) is the privacy boundary
+The default Rust implementation (`@drudwyn-v2 on`) is the privacy boundary
 described below. The public `v1.0.0` release and the explicit
-`@agent-watch-v2 off` compatibility mode classify agents by reading up to 200
+`@drudwyn-v2 off` compatibility mode classify agents by reading up to 200
 lines of pane scrollback with `tmux capture-pane`; they may keep a derived
 summary in tmux window options for the current session. They do not send that
 content to this project, but they are not content-blind and should not be used
@@ -32,18 +32,18 @@ clipboard content, file content, diffs, commit bodies, or environment-variable
 values. Task text is sent through stdin to a uniquely named tmux buffer, pasted
 with delete-on-paste, and is never placed in arguments, options, logs, or files.
 
-Set `@agent-watch-redact-labels on` before screen sharing to replace repository,
+Set `@drudwyn-redact-labels on` before screen sharing to replace repository,
 branch, session, and window labels while preserving lifecycle state and click
 navigation.
 
 Codex, Claude Code, OpenCode, Git hosts, package registries, and download tools
 are separate products with their own data practices. Launching an agent can
-send the task to services configured by that agent; `tmux-agent-watch` neither
+send the task to services configured by that agent; `tmux-drudwyn` neither
 controls nor receives that traffic.
 
 The explicit `s` action in either navigator invokes the locally installed
 `tmux-resurrect` save script. Resurrect owns the saved snapshot and follows its
-existing configuration, including optional terminal-content capture. Agent Watch
+existing configuration, including optional terminal-content capture. Drudwyn
 does not read the snapshot or save-script output, and the save action adds no
 separate content store. This external persistence is distinct from the live,
 content-blind supervision described above.

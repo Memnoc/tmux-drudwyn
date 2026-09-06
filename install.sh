@@ -2,15 +2,15 @@
 
 set -eu
 
-repository="${TMUX_AGENT_WATCH_REPOSITORY:-Memnoc/tmux-agent-watch}"
-version="${TMUX_AGENT_WATCH_VERSION:-latest}"
+repository="${TMUX_DRUDWYN_REPOSITORY:-Memnoc/tmux-drudwyn}"
+version="${TMUX_DRUDWYN_VERSION:-latest}"
 if [ "$version" = latest ]; then
   release_path='releases/latest/download'
 else
   release_path="releases/download/$version"
 fi
-base_url="${TMUX_AGENT_WATCH_BASE_URL:-https://github.com/$repository/$release_path}"
-install_dir="${TMUX_AGENT_WATCH_INSTALL_DIR:-$HOME/.local/bin}"
+base_url="${TMUX_DRUDWYN_BASE_URL:-https://github.com/$repository/$release_path}"
+install_dir="${TMUX_DRUDWYN_INSTALL_DIR:-$HOME/.local/bin}"
 
 case "$(uname -s)-$(uname -m)" in
   Linux-x86_64) target='x86_64-unknown-linux-gnu' ;;
@@ -18,12 +18,12 @@ case "$(uname -s)-$(uname -m)" in
   Darwin-x86_64) target='x86_64-apple-darwin' ;;
   Darwin-arm64|Darwin-aarch64) target='aarch64-apple-darwin' ;;
   *)
-    printf 'tmux-agent-watch: unsupported platform: %s %s\n' "$(uname -s)" "$(uname -m)" >&2
+    printf 'tmux-drudwyn: unsupported platform: %s %s\n' "$(uname -s)" "$(uname -m)" >&2
     exit 1
     ;;
 esac
 
-archive="tmux-agent-watch-${target}.tar.gz"
+archive="tmux-drudwyn-${target}.tar.gz"
 temporary="$(mktemp -d)"
 trap 'rm -rf "$temporary"' EXIT
 
@@ -38,7 +38,7 @@ expected="$(awk -v file="$archive" '
   }
 ' "$temporary/SHA256SUMS")"
 [ -n "$expected" ] || {
-  printf 'tmux-agent-watch: checksum is missing for %s\n' "$archive" >&2
+  printf 'tmux-drudwyn: checksum is missing for %s\n' "$archive" >&2
   exit 1
 }
 if command -v sha256sum >/dev/null 2>&1; then
@@ -47,16 +47,16 @@ else
   actual="$(shasum -a 256 "$temporary/$archive" | awk '{print $1}')"
 fi
 [ "$actual" = "$expected" ] || {
-  printf 'tmux-agent-watch: checksum verification failed for %s\n' "$archive" >&2
+  printf 'tmux-drudwyn: checksum verification failed for %s\n' "$archive" >&2
   exit 1
 }
 
 tar -xzf "$temporary/$archive" -C "$temporary"
-candidate="$temporary/tmux-agent-watch/tmux-agent-watch"
+candidate="$temporary/tmux-drudwyn/tmux-drudwyn"
 [ -x "$candidate" ] || {
-  printf 'tmux-agent-watch: release archive does not contain the binary\n' >&2
+  printf 'tmux-drudwyn: release archive does not contain the binary\n' >&2
   exit 1
 }
 mkdir -p "$install_dir"
-install -m 0755 "$candidate" "$install_dir/tmux-agent-watch"
-printf 'Installed tmux-agent-watch to %s\n' "$install_dir/tmux-agent-watch"
+install -m 0755 "$candidate" "$install_dir/tmux-drudwyn"
+printf 'Installed tmux-drudwyn to %s\n' "$install_dir/tmux-drudwyn"

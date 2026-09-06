@@ -18,10 +18,10 @@ Replace `/path/to` with the plugin checkout:
 
 ```toml
 [hooks]
-userPromptSubmit = [{ type = "command", command = "/path/to/tmux-agent-watch/scripts/codex-hook.sh userPromptSubmit" }]
-permissionRequest = [{ type = "command", command = "/path/to/tmux-agent-watch/scripts/codex-hook.sh permissionRequest" }]
-stop = [{ type = "command", command = "/path/to/tmux-agent-watch/scripts/codex-hook.sh stop" }]
-interrupt = [{ type = "command", command = "/path/to/tmux-agent-watch/scripts/codex-hook.sh interrupt" }]
+userPromptSubmit = [{ type = "command", command = "/path/to/tmux-drudwyn/scripts/codex-hook.sh userPromptSubmit" }]
+permissionRequest = [{ type = "command", command = "/path/to/tmux-drudwyn/scripts/codex-hook.sh permissionRequest" }]
+stop = [{ type = "command", command = "/path/to/tmux-drudwyn/scripts/codex-hook.sh stop" }]
+interrupt = [{ type = "command", command = "/path/to/tmux-drudwyn/scripts/codex-hook.sh interrupt" }]
 ```
 
 Review and trust the commands when Codex prompts you.
@@ -43,7 +43,7 @@ Add this inside the `hooks` object in `~/.claude/settings.json`, replacing
       "hooks": [
         {
           "type": "command",
-          "command": "/path/to/tmux-agent-watch/scripts/claude-hook.sh UserPromptSubmit"
+          "command": "/path/to/tmux-drudwyn/scripts/claude-hook.sh UserPromptSubmit"
         }
       ]
     }
@@ -53,7 +53,7 @@ Add this inside the `hooks` object in `~/.claude/settings.json`, replacing
       "hooks": [
         {
           "type": "command",
-          "command": "/path/to/tmux-agent-watch/scripts/claude-hook.sh PermissionRequest"
+          "command": "/path/to/tmux-drudwyn/scripts/claude-hook.sh PermissionRequest"
         }
       ]
     }
@@ -63,7 +63,7 @@ Add this inside the `hooks` object in `~/.claude/settings.json`, replacing
       "hooks": [
         {
           "type": "command",
-          "command": "/path/to/tmux-agent-watch/scripts/claude-hook.sh Stop"
+          "command": "/path/to/tmux-drudwyn/scripts/claude-hook.sh Stop"
         }
       ]
     }
@@ -73,7 +73,7 @@ Add this inside the `hooks` object in `~/.claude/settings.json`, replacing
       "hooks": [
         {
           "type": "command",
-          "command": "/path/to/tmux-agent-watch/scripts/claude-hook.sh StopFailure"
+          "command": "/path/to/tmux-drudwyn/scripts/claude-hook.sh StopFailure"
         }
       ]
     }
@@ -89,8 +89,8 @@ Optional. Relays OpenCode lifecycle events for immediate, exact status updates. 
 
 ```sh
 mkdir -p ~/.config/opencode/plugins
-cp /path/to/tmux-agent-watch/integrations/opencode-agent-watch.js \
-  ~/.config/opencode/plugins/tmux-agent-watch.js
+cp /path/to/tmux-drudwyn/integrations/opencode-drudwyn.js \
+  ~/.config/opencode/plugins/tmux-drudwyn.js
 ```
 
 Replace `/path/to` inside the copied file with the plugin checkout.

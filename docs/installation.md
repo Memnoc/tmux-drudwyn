@@ -2,6 +2,8 @@
 
 [Documentation](README.md) · [Project home](../README.md)
 
+Previously installed tmux-agent-watch? Start with the [rename upgrade guide](upgrading-to-drudwyn.md) to preserve your settings and update hook paths.
+
 ## Requirements
 
 - Linux or macOS, with tmux supporting `display-popup`.
@@ -24,14 +26,14 @@ the same checkout as the scripts, so both contain the same changes.
 Clone into a directory you intend to keep:
 
 ```sh
-git clone https://github.com/Memnoc/tmux-agent-watch.git ~/tmux-agent-watch
-cargo build --release --locked --manifest-path ~/tmux-agent-watch/Cargo.toml
+git clone https://github.com/Memnoc/tmux-drudwyn.git ~/tmux-drudwyn
+cargo build --release --locked --manifest-path ~/tmux-drudwyn/Cargo.toml
 ```
 
 Add this to `~/.tmux.conf`, after other plugins or themes that configure the status bar:
 
 ```tmux
-run-shell '~/tmux-agent-watch/tmux-agent-watch.tmux'
+run-shell '~/tmux-drudwyn/tmux-drudwyn.tmux'
 ```
 
 Reload and open the cockpit:
@@ -46,22 +48,26 @@ window. If either popup fails, see [troubleshooting](troubleshooting.md).
 
 ## Use a released binary
 
+Older releases retain their original asset names. Use a source build until the
+[releases page](https://github.com/Memnoc/tmux-drudwyn/releases) provides a matching
+`tmux-drudwyn-*` archive.
+
 The bundled installer downloads the latest published release for Linux or macOS
 on x86_64 or ARM64, verifies its checksum, and installs it to `~/.local/bin`:
 
 ```sh
-~/.tmux/plugins/tmux-agent-watch/install.sh
+~/.tmux/plugins/tmux-drudwyn/install.sh
 ```
 
 Use your actual checkout path if you did not install with TPM. Ensure
 `~/.local/bin` is on the PATH available to tmux. Check the installed binary with:
 
 ```sh
-~/.local/bin/tmux-agent-watch --version
+~/.local/bin/tmux-drudwyn --version
 ```
 
 A published release can lag behind a pulled branch. Check the
-[release notes](https://github.com/Memnoc/tmux-agent-watch/releases) and use scripts
+[release notes](https://github.com/Memnoc/tmux-drudwyn/releases) and use scripts
 from the matching release. For the features in a development checkout, build
 from that checkout instead.
 
@@ -71,7 +77,7 @@ Pull your intended branch if you have not already done so, then rebuild and relo
 For a TPM checkout:
 
 ```sh
-cd ~/.tmux/plugins/tmux-agent-watch
+cd ~/.tmux/plugins/tmux-drudwyn
 git pull --ff-only
 cargo build --release --locked
 tmux source-file ~/.tmux.conf
@@ -85,9 +91,9 @@ Close and reopen any navigator or cockpit popup that was open before the update.
 
 The plugin launcher checks these locations in order:
 
-1. `AGENT_WATCH_V2_BIN`, if explicitly set.
-2. `target/release/tmux-agent-watch` inside the plugin checkout.
-3. `tmux-agent-watch` on PATH.
+1. `DRUDWYN_V2_BIN`, if explicitly set.
+2. `target/release/tmux-drudwyn` inside the plugin checkout.
+3. `tmux-drudwyn` on PATH.
 
 A local release build therefore takes precedence over a downloaded binary.
 Rebuild it after pulling scripts; replacing only the PATH binary will not update
@@ -96,7 +102,7 @@ that local build.
 If you also want the command available in your shell, install from source with:
 
 ```sh
-cargo install --locked --path ~/.tmux/plugins/tmux-agent-watch
+cargo install --locked --path ~/.tmux/plugins/tmux-drudwyn
 ```
 
 Cargo normally installs to `~/.cargo/bin`. This does not replace an existing

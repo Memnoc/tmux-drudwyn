@@ -6,8 +6,8 @@ ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
 TMP_DIR="$(mktemp -d)"
 
 cleanup() {
-  tmux -L "agent-watch-help-default-$$" kill-server 2>/dev/null || true
-  tmux -L "agent-watch-help-custom-$$" kill-server 2>/dev/null || true
+  tmux -L "drudwyn-help-default-$$" kill-server 2>/dev/null || true
+  tmux -L "drudwyn-help-custom-$$" kill-server 2>/dev/null || true
   rm -rf "$TMP_DIR"
 }
 trap cleanup EXIT
@@ -15,13 +15,13 @@ trap cleanup EXIT
 start_tmux() {
   local socket="$1"
   tmux -L "$socket" -f /dev/null new-session -d -s help
-  tmux -L "$socket" set-option -g @agent-watch-hud off
-  tmux -L "$socket" set-option -g @agent-watch-sidebar off
+  tmux -L "$socket" set-option -g @drudwyn-hud off
+  tmux -L "$socket" set-option -g @drudwyn-sidebar off
 }
 
-default_socket="agent-watch-help-default-$$"
+default_socket="drudwyn-help-default-$$"
 start_tmux "$default_socket"
-tmux -L "$default_socket" run-shell "$ROOT/tmux-agent-watch.tmux"
+tmux -L "$default_socket" run-shell "$ROOT/tmux-drudwyn.tmux"
 default_binding="$(tmux -L "$default_socket" list-keys -T prefix | awk '$4 == "H" && /scripts\/help.sh/')"
 [ -n "$default_binding" ] || {
   printf 'not ok: default prefix + H help binding missing\n'
@@ -29,16 +29,16 @@ default_binding="$(tmux -L "$default_socket" list-keys -T prefix | awk '$4 == "H
 }
 printf 'ok: help is bound to prefix + H by default\n'
 
-custom_socket="agent-watch-help-custom-$$"
+custom_socket="drudwyn-help-custom-$$"
 start_tmux "$custom_socket"
-tmux -L "$custom_socket" set-option -g @agent-watch-help-key '?'
-tmux -L "$custom_socket" run-shell "$ROOT/tmux-agent-watch.tmux"
+tmux -L "$custom_socket" set-option -g @drudwyn-help-key '?'
+tmux -L "$custom_socket" run-shell "$ROOT/tmux-drudwyn.tmux"
 custom_binding="$(tmux -L "$custom_socket" list-keys -T prefix | awk '$4 == "?" && /scripts\/help.sh/')"
 [ -n "$custom_binding" ] || {
   printf 'not ok: configured help binding missing\n'
   exit 1
 }
-printf 'ok: @agent-watch-help-key configures the help binding\n'
+printf 'ok: @drudwyn-help-key configures the help binding\n'
 
 help_output="$(printf q | "$ROOT/scripts/help.sh")"
 for expected in \

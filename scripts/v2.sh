@@ -3,32 +3,32 @@
 set -eu
 
 PLUGIN_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
-binary="${AGENT_WATCH_V2_BIN:-}"
+binary="${DRUDWYN_V2_BIN:-}"
 
-if [ -z "$binary" ] && [ -x "$PLUGIN_DIR/target/release/tmux-agent-watch" ]; then
-  binary="$PLUGIN_DIR/target/release/tmux-agent-watch"
+if [ -z "$binary" ] && [ -x "$PLUGIN_DIR/target/release/tmux-drudwyn" ]; then
+  binary="$PLUGIN_DIR/target/release/tmux-drudwyn"
 fi
 if [ -z "$binary" ]; then
-  binary="$(command -v tmux-agent-watch 2>/dev/null || true)"
+  binary="$(command -v tmux-drudwyn 2>/dev/null || true)"
 fi
 if [ -z "$binary" ] || [ ! -x "$binary" ]; then
-  printf '%s\n' 'tmux-agent-watch v2 binary not found.' >&2
-  printf '%s\n' 'Install it with cargo install --path . or build target/release/tmux-agent-watch.' >&2
+  printf '%s\n' 'tmux-drudwyn v2 binary not found.' >&2
+  printf '%s\n' 'Install it with cargo install --path . or build target/release/tmux-drudwyn.' >&2
   exit 127
 fi
 
 case "${1:-}" in
   cockpit)
-    theme="$(tmux show-option -gqv @agent-watch-theme 2>/dev/null || true)"
+    theme="$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)"
     theme="${theme:-moon}"
     exec "$binary" cockpit --theme "$theme"
     ;;
   navigator)
-    theme="$(tmux show-option -gqv @agent-watch-theme 2>/dev/null || true)"
+    theme="$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)"
     exec "$binary" navigator --theme "${theme:-moon}"
     ;;
   sessions)
-    theme="$(tmux show-option -gqv @agent-watch-theme 2>/dev/null || true)"
+    theme="$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)"
     exec "$binary" sessions --theme "${theme:-moon}"
     ;;
   status) exec "$binary" status ;;

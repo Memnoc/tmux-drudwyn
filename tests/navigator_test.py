@@ -28,7 +28,7 @@ class NavigatorTest(unittest.TestCase):
         ).stdout.strip()
 
     def start(self, surface):
-        binary = Path(__file__).resolve().parents[1] / "target/debug/tmux-agent-watch"
+        binary = Path(__file__).resolve().parents[1] / "target/debug/tmux-drudwyn"
         self.pane = self.tmux(
             "new-window", "-d", "-P", "-F", "#{pane_id}", "-t", "keep",
             "-n", "navigator-test", shlex.join([str(binary), surface]),
@@ -198,9 +198,9 @@ class NavigatorTest(unittest.TestCase):
 
     def test_plugin_does_not_overwrite_resurrect_save_binding(self):
         self.tmux("bind-key", "C-s", "run-shell", "/test/resurrect/save.sh")
-        self.tmux("set-option", "-g", "@agent-watch-hud", "off")
-        self.tmux("set-option", "-g", "@agent_watch_watcher_pid", str(os.getpid()))
-        plugin = Path(__file__).resolve().parents[1] / "tmux-agent-watch.tmux"
+        self.tmux("set-option", "-g", "@drudwyn-hud", "off")
+        self.tmux("set-option", "-g", "@drudwyn_watcher_pid", str(os.getpid()))
+        plugin = Path(__file__).resolve().parents[1] / "tmux-drudwyn.tmux"
         self.tmux("run-shell", shlex.quote(str(plugin)))
         self.assertIn("/test/resurrect/save.sh", self.tmux("list-keys", "-T", "prefix", "C-s"))
         self.assertIn("choose-tree -Zs", self.tmux("list-keys", "-T", "prefix", "S"))

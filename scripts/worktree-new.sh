@@ -3,7 +3,7 @@
 set -eu
 
 PLUGIN_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
-v2="$(tmux show-option -gqv @agent-watch-v2 2>/dev/null || true)"
+v2="$(tmux show-option -gqv @drudwyn-v2 2>/dev/null || true)"
 if [ "${v2:-on}" = on ]; then
   exec "$PLUGIN_DIR/scripts/v2.sh" workspace start "$@"
 fi
@@ -25,25 +25,25 @@ branch="${1:-}"
 shift
 
 git check-ref-format --branch "$branch" >/dev/null 2>&1 || {
-  printf 'agent-watch: invalid branch name: %s\n' "$branch" >&2
+  printf 'drudwyn: invalid branch name: %s\n' "$branch" >&2
   exit 2
 }
 
 repo="$(git -C "${repo_hint:-.}" rev-parse --show-toplevel 2>/dev/null)" || {
-  printf 'agent-watch: current directory is not inside a Git repository\n' >&2
+  printf 'drudwyn: current directory is not inside a Git repository\n' >&2
   exit 1
 }
 repo_name="${repo##*/}"
-worktree_root="${AGENT_WATCH_WORKTREE_ROOT:-${repo%/*}/${repo_name}-worktrees}"
+worktree_root="${DRUDWYN_WORKTREE_ROOT:-${repo%/*}/${repo_name}-worktrees}"
 slug="${branch//\//-}"
 worktree="$worktree_root/$slug"
 
 [ ! -e "$worktree" ] || {
-  printf 'agent-watch: worktree path already exists: %s\n' "$worktree" >&2
+  printf 'drudwyn: worktree path already exists: %s\n' "$worktree" >&2
   exit 1
 }
 git -C "$repo" show-ref --verify --quiet "refs/heads/$branch" && {
-  printf 'agent-watch: branch already exists: %s\n' "$branch" >&2
+  printf 'drudwyn: branch already exists: %s\n' "$branch" >&2
   exit 1
 }
 
@@ -51,7 +51,7 @@ mkdir -p "$worktree_root"
 git -C "$repo" worktree add -q -b "$branch" "$worktree"
 
 if [ "$#" -eq 0 ]; then
-  agent="${AGENT_WATCH_AGENT:-$(tmux show-option -gqv @agent-watch-agent 2>/dev/null || true)}"
+  agent="${DRUDWYN_AGENT:-$(tmux show-option -gqv @drudwyn-agent 2>/dev/null || true)}"
   set -- "${agent:-codex}"
 fi
 
@@ -66,10 +66,10 @@ if ! window_id="$(tmux new-window -d -P -F '#{window_id}' -n "$slug" -c "$worktr
   git -C "$repo" branch -D "$branch" >/dev/null 2>&1 || true
   exit 1
 fi
-tmux set-option -wq -t "$window_id" @agent_watch_branch "$branch"
-tmux set-option -wq -t "$window_id" @agent_watch_worktree "$worktree"
-tmux set-option -wq -t "$window_id" @agent_watch_repo "$worktree"
-tmux set-option -wq -t "$window_id" @agent_watch_git_status clean
-tmux set-option -wq -t "$window_id" @agent_watch_git_checked "$(date +%s)"
+tmux set-option -wq -t "$window_id" @drudwyn_branch "$branch"
+tmux set-option -wq -t "$window_id" @drudwyn_worktree "$worktree"
+tmux set-option -wq -t "$window_id" @drudwyn_repo "$worktree"
+tmux set-option -wq -t "$window_id" @drudwyn_git_status clean
+tmux set-option -wq -t "$window_id" @drudwyn_git_checked "$(date +%s)"
 
 printf '%s\n' "$worktree"

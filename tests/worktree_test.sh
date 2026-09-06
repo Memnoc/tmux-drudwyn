@@ -3,7 +3,7 @@
 set -eu
 
 ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
-SOCKET="agent-watch-worktree-test-$$"
+SOCKET="drudwyn-worktree-test-$$"
 TMP_DIR="$(mktemp -d)"
 REPO="$TMP_DIR/example"
 WORKTREES="$TMP_DIR/worktrees"
@@ -15,8 +15,8 @@ cleanup() {
 trap cleanup EXIT
 
 git init -q "$REPO"
-git -C "$REPO" config user.name 'Agent Watch Test'
-git -C "$REPO" config user.email 'agent-watch@example.invalid'
+git -C "$REPO" config user.name 'Drudwyn Test'
+git -C "$REPO" config user.email 'drudwyn@example.invalid'
 touch "$REPO/README.md"
 git -C "$REPO" add README.md
 git -C "$REPO" commit -qm 'initial commit'
@@ -24,15 +24,15 @@ git -C "$REPO" branch -M main
 
 ln -s "$(command -v sleep)" "$TMP_DIR/codex"
 tmux -L "$SOCKET" -f /dev/null new-session -d -s agents -c "$REPO"
-tmux -L "$SOCKET" set-option -g @agent-watch-v2 off
-tmux -L "$SOCKET" set-option -g @agent-watch-sidebar on
+tmux -L "$SOCKET" set-option -g @drudwyn-v2 off
+tmux -L "$SOCKET" set-option -g @drudwyn-sidebar on
 socket_path="$(tmux -L "$SOCKET" display-message -p '#{socket_path}')"
 server_pid="$(tmux -L "$SOCKET" display-message -p '#{pid}')"
 
 created="$({
   cd "$TMP_DIR"
   TMUX="$socket_path,$server_pid,0" \
-    AGENT_WATCH_WORKTREE_ROOT="$WORKTREES" \
+    DRUDWYN_WORKTREE_ROOT="$WORKTREES" \
     "$ROOT/scripts/worktree-new.sh" --repo "$REPO" feature/auth "$TMP_DIR/codex" 30
 })"
 
@@ -54,40 +54,40 @@ window_path="$(tmux -L "$SOCKET" display-message -p -t "$created_window" '#{pane
   printf 'not ok: tmux window started in %s instead of %s\n' "$window_path" "$created"
   exit 1
 }
-[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @agent_watch_branch)" = feature/auth ] || {
+[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @drudwyn_branch)" = feature/auth ] || {
   printf 'not ok: tmux window does not expose its worktree branch\n'
   exit 1
 }
-[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @agent_watch_worktree)" = "$created" ] || {
+[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @drudwyn_worktree)" = "$created" ] || {
   printf 'not ok: tmux window does not expose its worktree path\n'
   exit 1
 }
 printf 'ok: launcher creates an isolated branch worktree and tmux window\n'
 
-tmux -L "$SOCKET" set-option -wuq -t "$created_window" @agent_watch_branch
-tmux -L "$SOCKET" set-option -wuq -t "$created_window" @agent_watch_worktree
-tmux -L "$SOCKET" set-option -g @agent-watch-git-interval 0
+tmux -L "$SOCKET" set-option -wuq -t "$created_window" @drudwyn_branch
+tmux -L "$SOCKET" set-option -wuq -t "$created_window" @drudwyn_worktree
+tmux -L "$SOCKET" set-option -g @drudwyn-git-interval 0
 TMUX="$socket_path,$server_pid,0" "$ROOT/scripts/scan.sh"
-[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @agent_watch_branch)" = feature/auth ] &&
-  [ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @agent_watch_worktree)" = "$created" ] || {
+[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @drudwyn_branch)" = feature/auth ] &&
+  [ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @drudwyn_worktree)" = "$created" ] || {
   printf 'not ok: observer did not discover an existing linked worktree\n'
   exit 1
 }
-[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @agent_watch_git_status)" = clean ] || {
+[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @drudwyn_git_status)" = clean ] || {
   printf 'not ok: observer did not report a clean worktree\n'
   exit 1
 }
 printf 'dirty\n' >> "$created/README.md"
 TMUX="$socket_path,$server_pid,0" "$ROOT/scripts/scan.sh"
-[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @agent_watch_git_status)" = dirty ] || {
+[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @drudwyn_git_status)" = dirty ] || {
   printf 'not ok: observer did not report a dirty worktree\n'
   exit 1
 }
-created_pane="$(tmux -L "$SOCKET" list-panes -t "$created_window" -F '#{pane_id}|#{@agent_watch_sidebar}' |
+created_pane="$(tmux -L "$SOCKET" list-panes -t "$created_window" -F '#{pane_id}|#{@drudwyn_sidebar}' |
   awk -F '|' '$2 != 1 { print $1; exit }')"
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$created_pane" "$ROOT/scripts/sidebar-resize.sh"
 sleep 1
-sidebar="$(tmux -L "$SOCKET" show-option -qv -t agents @agent_watch_sidebar_pane)"
+sidebar="$(tmux -L "$SOCKET" show-option -qv -t agents @drudwyn_sidebar_pane)"
 sidebar_frame="$(tmux -L "$SOCKET" capture-pane -p -t "$sidebar")"
 printf '%s\n' "$sidebar_frame" | grep -Fq '◆ WT feature/auth · DIRTY' || {
   printf 'not ok: expanded sidebar does not identify the dirty linked worktree\n'
@@ -100,7 +100,7 @@ printf 'ok: observer discovers external worktree metadata and dirty state\n'
 if {
   cd "$REPO"
   TMUX="$socket_path,$server_pid,0" \
-    AGENT_WATCH_WORKTREE_ROOT="$WORKTREES" \
+    DRUDWYN_WORKTREE_ROOT="$WORKTREES" \
     "$ROOT/scripts/worktree-new.sh" feature/auth "$TMP_DIR/codex" 30
 } >/dev/null 2>&1; then
   printf 'not ok: duplicate launcher unexpectedly succeeded\n'
@@ -116,7 +116,7 @@ printf 'dirty\n' >> "$created/README.md"
 if {
   cd "$REPO"
   TMUX="$socket_path,$server_pid,0" \
-    AGENT_WATCH_WORKTREE_ROOT="$WORKTREES" \
+    DRUDWYN_WORKTREE_ROOT="$WORKTREES" \
     "$ROOT/scripts/worktree-remove.sh" feature/auth
 } >/dev/null 2>&1; then
   printf 'not ok: dirty worktree removal unexpectedly succeeded\n'

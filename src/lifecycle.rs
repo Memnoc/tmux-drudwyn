@@ -9,7 +9,7 @@ use thiserror::Error;
 use crate::domain::{AgentKind, Lifecycle};
 
 const SEPARATOR: char = '\u{241f}';
-const PANE_FORMAT: &str = "#{window_id}␟#{pane_id}␟#{pane_current_command}␟#{pane_dead}␟#{@agent_watch_state}␟#{@agent_watch_source}";
+const PANE_FORMAT: &str = "#{window_id}␟#{pane_id}␟#{pane_current_command}␟#{pane_dead}␟#{@drudwyn_state}␟#{@drudwyn_source}";
 
 #[derive(Debug, Error)]
 pub enum LifecycleError {
@@ -40,7 +40,7 @@ pub fn scan() -> Result<(), LifecycleError> {
         }
 
         // Remove content retained by v1 as soon as v2 observes a workspace.
-        set_option(window_id, "@agent_watch_message", "")?;
+        set_option(window_id, "@drudwyn_message", "")?;
         if fields[3] == "1" {
             set_state(window_id, Lifecycle::Failed, "process")?;
         } else if fields[4].is_empty() || fields[5] != "hook" {
@@ -88,25 +88,25 @@ fn set_state(window_id: &str, lifecycle: Lifecycle, source: &str) -> Result<(), 
         Lifecycle::Failed => "failed",
         Lifecycle::Unknown => "",
     };
-    let previous = tmux_output(&["show-option", "-wqv", "-t", window_id, "@agent_watch_state"])?;
+    let previous = tmux_output(&["show-option", "-wqv", "-t", window_id, "@drudwyn_state"])?;
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs()
         .to_string();
     if previous != state {
-        set_option(window_id, "@agent_watch_since", &now)?;
+        set_option(window_id, "@drudwyn_since", &now)?;
         if lifecycle.needs_attention() {
-            set_option(window_id, "@agent_watch_attention_since", &now)?;
+            set_option(window_id, "@drudwyn_attention_since", &now)?;
         } else {
-            set_option(window_id, "@agent_watch_attention_since", "")?;
+            set_option(window_id, "@drudwyn_attention_since", "")?;
         }
     }
     let (symbol, color_option, fallback) = match lifecycle {
-        Lifecycle::Working | Lifecycle::Starting => ("", "@agent-watch-working-color", "#9ccfd8"),
-        Lifecycle::Waiting => ("●", "@agent-watch-needs-input-color", "#f6c177"),
-        Lifecycle::Review => ("●", "@agent-watch-done-color", "#31748f"),
-        Lifecycle::Failed => ("●", "@agent-watch-failed-color", "#eb6f92"),
+        Lifecycle::Working | Lifecycle::Starting => ("", "@drudwyn-working-color", "#9ccfd8"),
+        Lifecycle::Waiting => ("●", "@drudwyn-needs-input-color", "#f6c177"),
+        Lifecycle::Review => ("●", "@drudwyn-done-color", "#31748f"),
+        Lifecycle::Failed => ("●", "@drudwyn-failed-color", "#eb6f92"),
         Lifecycle::Unknown => ("", "", "default"),
     };
     let configured_color = if color_option.is_empty() {
@@ -119,18 +119,18 @@ fn set_state(window_id: &str, lifecycle: Lifecycle, source: &str) -> Result<(), 
     } else {
         &configured_color
     };
-    set_option(window_id, "@agent_watch_state", state)?;
-    set_option(window_id, "@agent_watch_source", source)?;
-    set_option(window_id, "@agent_watch_message", "")?;
+    set_option(window_id, "@drudwyn_state", state)?;
+    set_option(window_id, "@drudwyn_source", source)?;
+    set_option(window_id, "@drudwyn_message", "")?;
     let marker = if symbol.is_empty() {
         String::new()
     } else {
         format!("#[fg={color}]{symbol}#[default] ")
     };
-    set_option(window_id, "@agent_watch_marker", &marker)?;
+    set_option(window_id, "@drudwyn_marker", &marker)?;
     set_option(
         window_id,
-        "@agent_watch_window_style",
+        "@drudwyn_window_style",
         &format!("#[fg={color}]"),
     )?;
     Ok(())
@@ -138,13 +138,13 @@ fn set_state(window_id: &str, lifecycle: Lifecycle, source: &str) -> Result<(), 
 
 fn clear(window_id: &str) -> Result<(), LifecycleError> {
     for option in [
-        "@agent_watch_state",
-        "@agent_watch_source",
-        "@agent_watch_message",
-        "@agent_watch_since",
-        "@agent_watch_attention_since",
-        "@agent_watch_marker",
-        "@agent_watch_window_style",
+        "@drudwyn_state",
+        "@drudwyn_source",
+        "@drudwyn_message",
+        "@drudwyn_since",
+        "@drudwyn_attention_since",
+        "@drudwyn_marker",
+        "@drudwyn_window_style",
     ] {
         set_option(window_id, option, "")?;
     }

@@ -4,10 +4,10 @@ set -u
 
 current="$(tmux display-message -p '#{window_id}')"
 target="$({
-  tmux list-windows -a -F '#{@agent_watch_attention_since}|#{window_id}|#{session_name}' |
+  tmux list-windows -a -F '#{@drudwyn_attention_since}|#{window_id}|#{session_name}' |
     awk -F '|' -v current="$current" '$1 != "" && $2 != current { print }' |
     sort -n
-  tmux list-windows -a -F '#{@agent_watch_attention_since}|#{window_id}|#{session_name}' |
+  tmux list-windows -a -F '#{@drudwyn_attention_since}|#{window_id}|#{session_name}' |
     awk -F '|' -v current="$current" '$1 != "" && $2 == current { print }'
 } | head -n 1)"
 

@@ -3,7 +3,7 @@
 set -u
 
 printf '\033[H\033[J'
-printf '  tmux-agent-watch\n\n'
+printf '  tmux-drudwyn\n\n'
 printf '  AGENTS\n'
 printf '    ●  normal agent\n'
 printf '    ◆  agent in a linked Git worktree\n\n'

@@ -3,43 +3,43 @@
 set -eu
 
 PLUGIN_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
-v2="$(tmux show-option -gqv @agent-watch-v2 2>/dev/null || true)"
+v2="$(tmux show-option -gqv @drudwyn-v2 2>/dev/null || true)"
 if [ "${v2:-on}" = on ]; then
-  base="$(tmux show-option -gqv @agent-watch-base-branch 2>/dev/null || true)"
+  base="$(tmux show-option -gqv @drudwyn-base-branch 2>/dev/null || true)"
   exec "$PLUGIN_DIR/scripts/v2.sh" workspace finish --path "$(pwd)" --base "${base:-main}"
 fi
 
 worktree="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-  printf 'agent-watch: current directory is not inside a Git worktree\n' >&2
+  printf 'drudwyn: current directory is not inside a Git worktree\n' >&2
   exit 1
 }
 git_dir="$(git -C "$worktree" rev-parse --absolute-git-dir)"
 common_dir="$(git -C "$worktree" rev-parse --path-format=absolute --git-common-dir)"
 [ "$git_dir" != "$common_dir" ] || {
-  printf 'agent-watch: the primary checkout cannot be finished as a linked worktree\n' >&2
+  printf 'drudwyn: the primary checkout cannot be finished as a linked worktree\n' >&2
   exit 1
 }
 
 branch="$(git -C "$worktree" branch --show-current)"
 [ -n "$branch" ] || {
-  printf 'agent-watch: detached worktrees must be handled manually\n' >&2
+  printf 'drudwyn: detached worktrees must be handled manually\n' >&2
   exit 1
 }
 [ -z "$(git -C "$worktree" status --porcelain)" ] || {
-  printf 'agent-watch: worktree is dirty; review, commit, or discard its changes first\n' >&2
+  printf 'drudwyn: worktree is dirty; review, commit, or discard its changes first\n' >&2
   exit 1
 }
 
 main_worktree="$(git -C "$worktree" worktree list --porcelain |
   awk '/^worktree / { sub(/^worktree /, ""); print; exit }')"
-base_branch="$(tmux show-option -gqv @agent-watch-base-branch 2>/dev/null || true)"
+base_branch="$(tmux show-option -gqv @drudwyn-base-branch 2>/dev/null || true)"
 base_branch="${base_branch:-main}"
 git -C "$main_worktree" show-ref --verify --quiet "refs/heads/$base_branch" || {
-  printf 'agent-watch: base branch %s does not exist; set @agent-watch-base-branch\n' "$base_branch" >&2
+  printf 'drudwyn: base branch %s does not exist; set @drudwyn-base-branch\n' "$base_branch" >&2
   exit 1
 }
 git -C "$main_worktree" merge-base --is-ancestor "$branch" "$base_branch" || {
-  printf 'agent-watch: %s is not merged into %s; review and merge it first\n' "$branch" "$base_branch" >&2
+  printf 'drudwyn: %s is not merged into %s; review and merge it first\n' "$branch" "$base_branch" >&2
   exit 1
 }
 

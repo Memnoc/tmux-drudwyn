@@ -1,25 +1,25 @@
 ---
-system: tmux-agent-watch v2
+system: tmux-drudwyn v2
 owner: Memnoc
 last-reviewed: 2026-09-03
 phase: audit
 verdict: ready
 ---
 
-# Compliance: tmux-agent-watch v2
+# Compliance: tmux-drudwyn v2
 
 ## Boundary
 
 - Intended purpose: a deterministic, tmux-native supervisor for local coding-agent workspaces; it launches separately installed agents and presents operational lifecycle state. User-confirmed 2026-09-01.
 - Users and affected people: terminal-native developers operating their own local tmux and Git environments. It is not intended for evaluating, ranking, or making decisions about people. User-confirmed 2026-09-01.
-- Distribution and jurisdictions: public source and release artifacts distributed globally through GitHub, including the EU/EEA; there is no hosted service. User-confirmed 2026-09-01; repository remote: `git@github.com:Memnoc/tmux-agent-watch.git`.
+- Distribution and jurisdictions: public source and release artifacts distributed globally through GitHub, including the EU/EEA; there is no hosted service. User-confirmed 2026-09-01; repository remote: `git@github.com:Memnoc/tmux-drudwyn.git`.
 - Builder/operator legal roles: Memnoc is the open-source maintainer; each user operates the software locally. User-confirmed 2026-09-01.
 - Upstream providers and models: Codex, Claude Code, and OpenCode are independently selected and installed third-party tools. v2 supplies and operates no model. User-confirmed 2026-09-01.
 - Training or fine-tuning: none. User-confirmed 2026-09-01.
 - Data categories, sources, destinations, retention, deletion: v2 may transiently route a user-entered task to the chosen local agent and may inspect non-content tmux, process, and Git metadata. It must not read or retain prompts, messages, generated content, permission text, terminal scrollback, task history, telemetry, analytics, or crash reports. No project backend receives data. Runtime state is discarded with the process or tmux session. User-confirmed 2026-09-01.
 - Outputs and decisions influenced: fixed operational labels and user-requested tmux/Git actions. No decisions about people. User-confirmed 2026-09-01.
 - Behaviour configuration: typed local configuration derived from documented tmux options; deterministic rules only. No model, remote feature flags, or content inference. Confirmed architecture interview 2026-09-01.
-- Release state and relevant dates: `v1.0.0` remains the only public tag. Rust `2.0.0-alpha.1` is the default implementation on the reviewed `ux/statusline-tabs` source tree rooted at `77cf87d9aa7944bb820459f3f3a813f094650823`; it is not yet a tagged release. `@agent-watch-v2 off` retains the content-reading legacy Bash compatibility path. Repository inspection and tests performed 2026-09-03 cover that revision plus the disclosure and CI hardening recorded in the current audit change set.
+- Release state and relevant dates: `v1.0.0` remains the only public tag. Rust `2.0.0-alpha.1` is the default implementation on the reviewed `ux/statusline-tabs` source tree rooted at `77cf87d9aa7944bb820459f3f3a813f094650823`; it is not yet a tagged release. `@drudwyn-v2 off` retains the content-reading legacy Bash compatibility path. Repository inspection and tests performed 2026-09-03 cover that revision plus the disclosure and CI hardening recorded in the current audit change set.
 
 ## Trigger triage
 
@@ -49,7 +49,7 @@ verdict: ready
 | Affected party | Capability, failure, or misuse | Reach and reversibility | Safeguard evidence | Disposition |
 |----------------|--------------------------------|-------------------------|--------------------|-------------|
 | Local developer | task or agent content retained by the supervisor | local but potentially sensitive; copies may be difficult to retract | content-blind discovery/hook tests and outer-seam transient delivery test | ready |
-| Developer during screen sharing | repository, branch, task, or workspace labels exposed | audience of the share; disclosure may be irreversible | `@agent-watch-redact-labels`, unit tests, and rendered tmux integration test | ready |
+| Developer during screen sharing | repository, branch, task, or workspace labels exposed | audience of the share; disclosure may be irreversible | `@drudwyn-redact-labels`, unit tests, and rendered tmux integration test | ready |
 | Employee or contractor | activity state repurposed for performance monitoring | potentially organisational and rights-affecting | unsupported intended purpose, no history/backend/identity, privacy notice requires deployer assessment | ready within stated purpose; new review required for monitoring support |
 | Operator repository | unsafe worktree deletion | local code loss, partly reversible through Git | clean, linked, merged, and confirmation guards in v2 integration suite | ready |
 | Legacy-mode user | prompts, responses, or permission details exposed through scrollback classification and session summaries | local and session-scoped, but content may be sensitive | legacy mode is opt-in on current source; `docs/privacy.md` and README identify the distinct boundary; no remote destination exists | ready with disclosure; not evidence for v2 content-blind claims |
@@ -69,7 +69,7 @@ verdict: ready
 | P-2 | Agent prompts and output can contain sensitive content | Never inspect pane scrollback, prompts, responses, permission details, clipboard, diffs, file contents, environment values, or commit bodies | Memnoc | `src/lifecycle.rs`, `src/discovery.rs`, and `tests/v2_test.sh`, including task-delivery outer-seam coverage | ready |
 | P-3 | A task is needed to start an agent | Route task text directly to the chosen agent without storing it in plugin state, environment variables, tmux options, or logs | Memnoc | `workspace::deliver_task` uses stdin and a uniquely named delete-on-paste tmux buffer; `tests/v2_test.sh` verifies pane delivery and absence from options, buffers, environment, and process arguments | ready |
 | P-4 | Diagnostics can accidentally disclose metadata | Default to transient errors only; any future debug export requires a separate review, explicit preview, redaction, and user-chosen destination | Memnoc | no diagnostic/export command, logging framework, or crash uploader in source or dependencies; errors remain transient stderr/TUI state | ready |
-| P-5 | Screen sharing can expose local metadata | Provide a display-redaction mode for repository, path, branch, task, session, and window labels | Memnoc | typed `@agent-watch-redact-labels`; cockpit/ambient unit tests and outer-seam sidebar test | ready |
+| P-5 | Screen sharing can expose local metadata | Provide a display-redaction mode for repository, path, branch, task, session, and window labels | Memnoc | typed `@drudwyn-redact-labels`; cockpit/ambient unit tests and outer-seam sidebar test | ready |
 | P-6 | Privacy boundary can regress | CI checks dependencies and source for network, analytics, crash, and database paths; document the local data-flow manifest | Memnoc | `tests/privacy_test.sh` is included by `tests/run.sh`; `docs/privacy.md` | ready |
 | P-7 | Legacy compatibility mode falls outside the v2 privacy boundary | Scope every content-blind claim to the default Rust implementation and disclose legacy pane/payload inspection | Memnoc | `README.md`, `docs/privacy.md`, and the version-boundary assertion in `tests/privacy_test.sh` | ready |
 
@@ -102,7 +102,7 @@ verdict: ready
 - Evidence exercised: 14 Rust unit tests; complete v1/v2 tmux suite; rendered redaction with navigation preserved; task delivery with absence checks across tmux options, buffers, server environment, and process arguments; dependency/source privacy checks; offline release build; Linux ELF linkage and SHA-256 capture.
 - Accepted unverifiable evidence, approver, and rationale: macOS and ARM64 artifacts do not yet exist and are outside the current distributed artifact set; they require the same verification before publication. No hosted GitHub release settings or unpublished artifact provenance were asserted.
 - Verdict and reason: `ready` for the recorded v2 source and local Linux x86_64 artifact because all applicable privacy and deterministic-boundary outcomes have executable evidence and no release-blocking issue was identified within this coverage. This is not a legal opinion and does not cover future binaries until verified.
-- Migration verification: an unset `@agent-watch-v2` selects Rust cockpit, scanning, hooks, ambient surfaces, and workspace lifecycle actions; an explicit `off` restores the legacy Bash path. Both paths pass the assembled suite.
+- Migration verification: an unset `@drudwyn-v2` selects Rust cockpit, scanning, hooks, ambient surfaces, and workspace lifecycle actions; an explicit `off` restores the legacy Bash path. Both paths pass the assembled suite.
 - Distribution verification: the tag workflow requires an exact Cargo version match, builds on four native GitHub-hosted runner architectures, publishes immutable per-target artifacts plus `SHA256SUMS`, and grants write permission only to the publish job. The local package/install seam verifies archive contents, checksum enforcement, installation, and execution. Hosted runner outputs remain unverified until the first tag workflow completes.
 - Preflight gate: `workflow_dispatch` builds and verifies the same four-platform matrix but the publish job is guarded by a version-tag reference. The combined checksum-bearing bundle is retained for 14 days for the acceptance work in `docs/preflight-checklist.md`; `tests/release_workflow_test.sh` protects the matrix and publication guards.
 

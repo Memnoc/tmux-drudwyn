@@ -3,7 +3,7 @@
 set -eu
 
 ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
-SOCKET="agent-watch-test-$$"
+SOCKET="drudwyn-test-$$"
 TMP_DIR="$(mktemp -d)"
 
 cleanup() {
@@ -14,12 +14,12 @@ trap cleanup EXIT
 
 ln -s "$(command -v sleep)" "$TMP_DIR/codex"
 tmux -L "$SOCKET" -f /dev/null new-session -d -s agents "$TMP_DIR/codex 30"
-tmux -L "$SOCKET" set-option -g @agent-watch-v2 off
-tmux -L "$SOCKET" set-option -g @agent-watch-sidebar on
+tmux -L "$SOCKET" set-option -g @drudwyn-v2 off
+tmux -L "$SOCKET" set-option -g @drudwyn-sidebar on
 socket_path="$(tmux -L "$SOCKET" display-message -p '#{socket_path}')"
 server_pid="$(tmux -L "$SOCKET" display-message -p '#{pid}')"
 tmux -L "$SOCKET" set-environment -g TMUX "$socket_path,$server_pid,0"
-tmux -L "$SOCKET" run-shell "$ROOT/tmux-agent-watch.tmux"
+tmux -L "$SOCKET" run-shell "$ROOT/tmux-drudwyn.tmux"
 sleep 1
 
 hud_fleet="$(tmux -L "$SOCKET" show-option -gqv 'status-format[0]')$(tmux -L "$SOCKET" show-option -gqv 'status-format[1]')"
@@ -66,7 +66,7 @@ if tmux -L "$SOCKET" list-keys -T prefix | grep -q 'scripts/worktree-lazygit.sh'
 fi
 printf 'ok: no external Git UI binding is installed\n'
 
-sidebar_wheel_binding="$(tmux -L "$SOCKET" list-keys -T root | grep 'WheelUpPane.*@agent_watch_sidebar' || true)"
+sidebar_wheel_binding="$(tmux -L "$SOCKET" list-keys -T root | grep 'WheelUpPane.*@drudwyn_sidebar' || true)"
 [ -n "$sidebar_wheel_binding" ] || { printf 'not ok: sidebar wheel guard missing\n'; exit 1; }
 printf 'ok: sidebar blocks wheel scrolling without changing other panes\n'
 
@@ -74,50 +74,50 @@ swap_bindings="$(tmux -L "$SOCKET" list-keys -T prefix | grep -c 'scripts/safe-s
 [ "$swap_bindings" = 2 ] || { printf 'not ok: guarded pane swap bindings missing\n'; exit 1; }
 printf 'ok: pane swap bindings protect sidebar position\n'
 
-tmux -L "$SOCKET" run-shell "$ROOT/tmux-agent-watch.tmux"
-tmux -L "$SOCKET" run-shell "$ROOT/tmux-agent-watch.tmux"
+tmux -L "$SOCKET" run-shell "$ROOT/tmux-drudwyn.tmux"
+tmux -L "$SOCKET" run-shell "$ROOT/tmux-drudwyn.tmux"
 hook_count="$(tmux -L "$SOCKET" show-hooks -g after-new-window | grep -c "$ROOT/scripts/scan.sh")"
 [ "$hook_count" = 1 ] || { printf 'not ok: plugin reload duplicated hooks\n'; exit 1; }
 printf 'ok: plugin reload keeps hooks unique\n'
 
-state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @agent_watch_state)"
+state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_state)"
 [ "$state" = working ] || { printf 'not ok: expected working, got %s\n' "$state"; exit 1; }
 printf 'ok: observer classified agent\n'
 
-first_pane="$(tmux -L "$SOCKET" list-panes -t agents:0 -F '#{pane_id}|#{@agent_watch_sidebar}' |
+first_pane="$(tmux -L "$SOCKET" list-panes -t agents:0 -F '#{pane_id}|#{@drudwyn_sidebar}' |
   awk -F '|' '$2 != 1 { print $1; exit }')"
 printf '{"prompt":"implement exact lifecycle states"}' |
   TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/claude-hook.sh" UserPromptSubmit
-hook_message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @agent_watch_message)"
-hook_source="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @agent_watch_source)"
+hook_message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_message)"
+hook_source="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_source)"
 [ "$hook_message" = 'implement exact lifecycle states' ] && [ "$hook_source" = hook ] || {
   printf 'not ok: lifecycle hook did not publish an exact state\n'; exit 1;
 }
 printf '{}' | TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/claude-hook.sh" Stop
 sleep 2
-state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @agent_watch_state)"
+state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_state)"
 [ "$state" = done ] || { printf 'not ok: observer overwrote exact hook state with %s\n' "$state"; exit 1; }
 printf 'ok: exact lifecycle state outranks observer fallback\n'
 
 printf '{"prompt":"verify Codex hook events"}' |
   TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/codex-hook.sh" userPromptSubmit
-hook_message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @agent_watch_message)"
+hook_message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_message)"
 [ "$hook_message" = 'verify Codex hook events' ] || {
   printf 'not ok: Codex lifecycle hook did not capture its prompt\n'; exit 1;
 }
 printf '{}' | TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/codex-hook.sh" permissionRequest
-state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @agent_watch_state)"
+state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_state)"
 [ "$state" = needs_input ] || { printf 'not ok: Codex permission hook produced %s\n' "$state"; exit 1; }
 printf 'ok: Codex lifecycle events publish exact states\n'
 
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/opencode-hook.sh" working
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/opencode-hook.sh" permission 'Approve file write'
-message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @agent_watch_message)"
+message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_message)"
 [ "$message" = 'Approve file write' ] || {
   printf 'not ok: OpenCode lifecycle hook lost its permission reason\n'; exit 1;
 }
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/opencode-hook.sh" idle
-state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @agent_watch_state)"
+state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_state)"
 [ "$state" = done ] || { printf 'not ok: OpenCode idle hook produced %s\n' "$state"; exit 1; }
 printf 'ok: OpenCode lifecycle events publish exact states\n'
 
@@ -127,9 +127,9 @@ printf '%s' "$fleet_output" | grep -Fq '1 agents' || { printf 'not ok: HUD fleet
 printf '%s' "$selected_output" | grep -Fq 'REVIEW' || { printf 'not ok: HUD selected state missing\n'; exit 1; }
 printf 'ok: HUD renders fleet and selected agent\n'
 
-sidebar="$(tmux -L "$SOCKET" show-option -qv -t agents @agent_watch_sidebar_pane)"
+sidebar="$(tmux -L "$SOCKET" show-option -qv -t agents @drudwyn_sidebar_pane)"
 [ -n "$sidebar" ] || { printf 'not ok: sidebar was not created\n'; exit 1; }
-sidebar_marker="$(tmux -L "$SOCKET" show-option -pqv -t "$sidebar" @agent_watch_sidebar)"
+sidebar_marker="$(tmux -L "$SOCKET" show-option -pqv -t "$sidebar" @drudwyn_sidebar)"
 [ "$sidebar_marker" = 1 ] || { printf 'not ok: sidebar pane is not marked\n'; exit 1; }
 sidebar_width="$(tmux -L "$SOCKET" display-message -p -t "$sidebar" '#{pane_width}')"
 [ "$sidebar_width" = 3 ] || { printf 'not ok: collapsed sidebar width is %s\n' "$sidebar_width"; exit 1; }
@@ -139,20 +139,20 @@ printf 'ok: sidebar created for agent session\n'
 
 old_sidebar="$sidebar"
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/sidebar-restart.sh"
-sidebar="$(tmux -L "$SOCKET" show-option -qv -t agents @agent_watch_sidebar_pane)"
+sidebar="$(tmux -L "$SOCKET" show-option -qv -t agents @drudwyn_sidebar_pane)"
 [ "$sidebar" != "$old_sidebar" ] &&
-  [ "$(tmux -L "$SOCKET" show-option -pqv -t "$sidebar" @agent_watch_sidebar)" = 1 ] || {
+  [ "$(tmux -L "$SOCKET" show-option -pqv -t "$sidebar" @drudwyn_sidebar)" = 1 ] || {
   printf 'not ok: sidebar restart did not replace the generated pane\n'; exit 1;
 }
 printf 'ok: sidebar restart replaces only the generated pane\n'
 
 tmux -L "$SOCKET" kill-pane -t "$sidebar"
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/sidebar-resize.sh"
-sidebar="$(tmux -L "$SOCKET" show-option -qv -t agents @agent_watch_sidebar_pane)"
+sidebar="$(tmux -L "$SOCKET" show-option -qv -t agents @drudwyn_sidebar_pane)"
 tmux -L "$SOCKET" display-message -p -t "$sidebar" '#{pane_id}' >/dev/null 2>&1 || {
   printf 'not ok: sidebar toggle did not recover a stale pane ID\n'; exit 1;
 }
-expanded="$(tmux -L "$SOCKET" show-option -qv -t agents @agent_watch_sidebar_expanded)"
+expanded="$(tmux -L "$SOCKET" show-option -qv -t agents @drudwyn_sidebar_expanded)"
 [ "$expanded" = on ] || {
   printf 'not ok: recovered sidebar did not honor the requested expansion\n'; exit 1;
 }
@@ -187,7 +187,7 @@ second_name="$(tmux -L "$SOCKET" display-message -p -t "$second_window" '#{windo
 printf 'ok: sidebar follows selected window\n'
 
 sleep 1
-click_map="$(tmux -L "$SOCKET" show-option -pqv -t "$sidebar" @agent_watch_click_map)"
+click_map="$(tmux -L "$SOCKET" show-option -pqv -t "$sidebar" @drudwyn_click_map)"
 printf '%s' "$click_map" | grep -Fq "1=${second_window}" || {
   printf 'not ok: sidebar click map missing second window %s: %s\n' "$second_window" "$click_map"
   exit 1
@@ -199,7 +199,7 @@ selected="$(tmux -L "$SOCKET" display-message -p -t agents: '#{window_id}')"
 printf 'ok: sidebar rows select agent windows\n'
 
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$second_pane" "$ROOT/scripts/sidebar-resize.sh"
-expanded="$(tmux -L "$SOCKET" show-option -qv -t agents @agent_watch_sidebar_expanded)"
+expanded="$(tmux -L "$SOCKET" show-option -qv -t agents @drudwyn_sidebar_expanded)"
 [ "$expanded" = on ] || { printf 'not ok: sidebar did not expand\n'; exit 1; }
 printf 'ok: sidebar expands with one action\n'
 

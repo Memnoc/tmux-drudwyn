@@ -26,7 +26,7 @@ use crate::{
 };
 
 const SEP: char = '\u{241f}';
-const FORMAT: &str = "#{session_name}␟#{window_id}␟#{window_index}␟#{window_name}␟#{pane_current_command}␟#{@agent_watch_state}␟#{@agent_watch_since}␟#{@agent_watch_branch}";
+const FORMAT: &str = "#{session_name}␟#{window_id}␟#{window_index}␟#{window_name}␟#{pane_current_command}␟#{@drudwyn_state}␟#{@drudwyn_since}␟#{@drudwyn_branch}";
 
 #[derive(Clone)]
 struct Window {
@@ -185,7 +185,7 @@ fn handle_key(app: &mut App, code: KeyCode) -> NavigationAction {
 
 pub fn run(variant: Variant) -> io::Result<()> {
     let current = tmux_output(&["display-message", "-p", "#{window_id}"])?;
-    let nerd_icons = tmux_output(&["show-option", "-gqv", "@agent-watch-icon-mode"])
+    let nerd_icons = tmux_output(&["show-option", "-gqv", "@drudwyn-icon-mode"])
         .is_ok_and(|value| value == "nerd");
     let windows = discover()?;
     let selected = windows
@@ -536,7 +536,7 @@ mod tests {
 
     #[test]
     fn navigator_discovery_format_is_content_blind() {
-        for forbidden in ["@agent_watch_message", "capture-pane", "pane_title"] {
+        for forbidden in ["@drudwyn_message", "capture-pane", "pane_title"] {
             assert!(!FORMAT.contains(forbidden));
         }
     }

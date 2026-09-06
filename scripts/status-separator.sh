@@ -7,7 +7,7 @@ case "$width" in
   ''|*[!0-9]*) exit 0 ;;
 esac
 
-color="$(tmux show-option -gqv @agent-watch-separator-color 2>/dev/null || true)"
+color="$(tmux show-option -gqv @drudwyn-separator-color 2>/dev/null || true)"
 color="${color:-#393552}"
 
 printf '#[fg=%s]' "$color"
