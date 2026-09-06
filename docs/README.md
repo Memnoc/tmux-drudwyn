@@ -6,6 +6,7 @@
 
 | I want to… | Read |
 | --- | --- |
+| Migrate from tmux-agent-watch without losing settings | [Upgrade to Drudwyn](upgrading-to-drudwyn.md) |
 | Install the plugin or update an existing checkout | [Installation and updates](installation.md) |
 | Navigate agents, manage worktrees, or save sessions | [Daily use](usage.md) |
 | Connect agent lifecycle hooks | [Agent integrations](agents.md) |
@@ -18,8 +19,9 @@ cockpit with `prefix + P`, then try the workspace navigator with `prefix + w`.
 
 ## Development and project background
 
+- [README standard](readme-style.md): reusable layout and authoring skill.
 - [Contributing](../CONTRIBUTING.md): setup, repository map, and checks.
 - [Domain context](../CONTEXT.md): workspace and lifecycle terminology.
 - [Architecture decisions](adr/README.md): why the project is structured this way.
 - [Release preflight](preflight-checklist.md): build and acceptance checklist.
-- [Compliance record](compliance/tmux-agent-watch-v2.md) and [research notes](research/): supporting project records.
+- [Compliance record](compliance/tmux-drudwyn-v2.md) and [research notes](research/): supporting project records.

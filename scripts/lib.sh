@@ -135,60 +135,60 @@ classify_output() {
 
 symbol_for_state() {
   case "$1" in
-    working) tmux_option @agent-watch-working-symbol '●' ;;
-    needs_input) tmux_option @agent-watch-needs-input-symbol '●' ;;
-    done) tmux_option @agent-watch-done-symbol '●' ;;
-    failed) tmux_option @agent-watch-failed-symbol '●' ;;
+    working) tmux_option @drudwyn-working-symbol '●' ;;
+    needs_input) tmux_option @drudwyn-needs-input-symbol '●' ;;
+    done) tmux_option @drudwyn-done-symbol '●' ;;
+    failed) tmux_option @drudwyn-failed-symbol '●' ;;
   esac
 }
 
 color_for_state() {
   case "$1" in
-    working) tmux_option @agent-watch-working-color '#9ccfd8' ;;
-    needs_input) tmux_option @agent-watch-needs-input-color '#f6c177' ;;
-    done) tmux_option @agent-watch-done-color '#a6da95' ;;
-    failed) tmux_option @agent-watch-failed-color '#ed8796' ;;
+    working) tmux_option @drudwyn-working-color '#9ccfd8' ;;
+    needs_input) tmux_option @drudwyn-needs-input-color '#f6c177' ;;
+    done) tmux_option @drudwyn-done-color '#a6da95' ;;
+    failed) tmux_option @drudwyn-failed-color '#ed8796' ;;
   esac
 }
 
 set_window_state() {
   local window_id="$1" state="$2" message="${3:-}" source="${4:-observer}"
   local previous previous_source now marker color symbol
-  previous="$(window_option "$window_id" @agent_watch_state)"
-  previous_source="$(window_option "$window_id" @agent_watch_source)"
+  previous="$(window_option "$window_id" @drudwyn_state)"
+  previous_source="$(window_option "$window_id" @drudwyn_source)"
   if [ "$state" != unmanaged ] && [ "$source" = observer ] && [ "$previous_source" = hook ]; then
     return
   fi
   if [ "$state" = working ] && [ "$previous" = working ] && [ "$message" = Working ]; then
-    message="$(window_option "$window_id" @agent_watch_message)"
+    message="$(window_option "$window_id" @drudwyn_message)"
     message="${message:-Working}"
   fi
   now="$(date +%s)"
 
   if [ "$state" = unmanaged ]; then
-    tmux set-option -wq -t "$window_id" @agent_watch_state ''
-    tmux set-option -wq -t "$window_id" @agent_watch_marker ''
-    tmux set-option -wq -t "$window_id" @agent_watch_window_style ''
-    tmux set-option -wq -t "$window_id" @agent_watch_message ''
-    tmux set-option -wq -t "$window_id" @agent_watch_source ''
-    tmux set-option -wq -t "$window_id" @agent_watch_repo ''
-    tmux set-option -wq -t "$window_id" @agent_watch_branch ''
-    tmux set-option -wq -t "$window_id" @agent_watch_worktree ''
-    tmux set-option -wq -t "$window_id" @agent_watch_git_status ''
-    tmux set-option -wq -t "$window_id" @agent_watch_git_checked ''
+    tmux set-option -wq -t "$window_id" @drudwyn_state ''
+    tmux set-option -wq -t "$window_id" @drudwyn_marker ''
+    tmux set-option -wq -t "$window_id" @drudwyn_window_style ''
+    tmux set-option -wq -t "$window_id" @drudwyn_message ''
+    tmux set-option -wq -t "$window_id" @drudwyn_source ''
+    tmux set-option -wq -t "$window_id" @drudwyn_repo ''
+    tmux set-option -wq -t "$window_id" @drudwyn_branch ''
+    tmux set-option -wq -t "$window_id" @drudwyn_worktree ''
+    tmux set-option -wq -t "$window_id" @drudwyn_git_status ''
+    tmux set-option -wq -t "$window_id" @drudwyn_git_checked ''
     return
   fi
 
   if [ "$state" != "$previous" ]; then
-    tmux set-option -wq -t "$window_id" @agent_watch_since "$now"
+    tmux set-option -wq -t "$window_id" @drudwyn_since "$now"
     case "$state" in
       needs_input|done|failed)
-        tmux set-option -wq -t "$window_id" @agent_watch_attention_since "$now"
+        tmux set-option -wq -t "$window_id" @drudwyn_attention_since "$now"
         if [ -n "$previous" ]; then
           tmux display-message -d 3000 "Agent $(tmux display-message -p -t "$window_id" '#W'): ${state//_/ }"
         fi
         ;;
-      *) tmux set-option -wq -t "$window_id" @agent_watch_attention_since '' ;;
+      *) tmux set-option -wq -t "$window_id" @drudwyn_attention_since '' ;;
     esac
   fi
 
@@ -199,12 +199,12 @@ set_window_state() {
   else
     marker="#[fg=${color}]${symbol}#[default] "
   fi
-  tmux set-option -wq -t "$window_id" @agent_watch_state "$state"
-  tmux set-option -wq -t "$window_id" @agent_watch_marker "$marker"
-  tmux set-option -wq -t "$window_id" @agent_watch_window_style "#[fg=${color}]"
-  tmux set-option -wq -t "$window_id" @agent_watch_source "$source"
+  tmux set-option -wq -t "$window_id" @drudwyn_state "$state"
+  tmux set-option -wq -t "$window_id" @drudwyn_marker "$marker"
+  tmux set-option -wq -t "$window_id" @drudwyn_window_style "#[fg=${color}]"
+  tmux set-option -wq -t "$window_id" @drudwyn_source "$source"
   message="${message//|/¦}"
-  tmux set-option -wq -t "$window_id" @agent_watch_message "$message"
+  tmux set-option -wq -t "$window_id" @drudwyn_message "$message"
 }
 
 set_window_git_context() {
@@ -212,11 +212,11 @@ set_window_git_context() {
   local previous_repo checked now interval
   repo="$(git -C "$path" rev-parse --show-toplevel 2>/dev/null || true)"
   if [ -z "$repo" ]; then
-    tmux set-option -wq -t "$window_id" @agent_watch_repo ''
-    tmux set-option -wq -t "$window_id" @agent_watch_branch ''
-    tmux set-option -wq -t "$window_id" @agent_watch_worktree ''
-    tmux set-option -wq -t "$window_id" @agent_watch_git_status ''
-    tmux set-option -wq -t "$window_id" @agent_watch_git_checked ''
+    tmux set-option -wq -t "$window_id" @drudwyn_repo ''
+    tmux set-option -wq -t "$window_id" @drudwyn_branch ''
+    tmux set-option -wq -t "$window_id" @drudwyn_worktree ''
+    tmux set-option -wq -t "$window_id" @drudwyn_git_status ''
+    tmux set-option -wq -t "$window_id" @drudwyn_git_checked ''
     return
   fi
 
@@ -224,20 +224,20 @@ set_window_git_context() {
   git_dir="$(git -C "$path" rev-parse --absolute-git-dir 2>/dev/null || true)"
   common_dir="$(git -C "$path" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
   if [ "$git_dir" != "$common_dir" ]; then worktree="$repo"; else worktree=''; fi
-  previous_repo="$(window_option "$window_id" @agent_watch_repo)"
-  checked="$(window_option "$window_id" @agent_watch_git_checked)"
-  status="$(window_option "$window_id" @agent_watch_git_status)"
+  previous_repo="$(window_option "$window_id" @drudwyn_repo)"
+  checked="$(window_option "$window_id" @drudwyn_git_checked)"
+  status="$(window_option "$window_id" @drudwyn_git_status)"
   now="$(date +%s)"
-  interval="$(tmux_option @agent-watch-git-interval 10)"
+  interval="$(tmux_option @drudwyn-git-interval 10)"
   if [ "$previous_repo" != "$repo" ] || [ -z "$checked" ] ||
     [ "$((now - checked))" -ge "$interval" ]; then
     if [ -n "$(git -C "$path" status --porcelain 2>/dev/null)" ]; then status=dirty; else status=clean; fi
     checked="$now"
   fi
 
-  tmux set-option -wq -t "$window_id" @agent_watch_repo "$repo"
-  tmux set-option -wq -t "$window_id" @agent_watch_branch "${branch:-detached}"
-  tmux set-option -wq -t "$window_id" @agent_watch_worktree "$worktree"
-  tmux set-option -wq -t "$window_id" @agent_watch_git_status "$status"
-  tmux set-option -wq -t "$window_id" @agent_watch_git_checked "$checked"
+  tmux set-option -wq -t "$window_id" @drudwyn_repo "$repo"
+  tmux set-option -wq -t "$window_id" @drudwyn_branch "${branch:-detached}"
+  tmux set-option -wq -t "$window_id" @drudwyn_worktree "$worktree"
+  tmux set-option -wq -t "$window_id" @drudwyn_git_status "$status"
+  tmux set-option -wq -t "$window_id" @drudwyn_git_checked "$checked"
 }

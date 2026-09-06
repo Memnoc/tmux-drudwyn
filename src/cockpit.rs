@@ -172,7 +172,7 @@ pub fn run(variant: Variant) -> Result<(), CockpitError> {
     let config = Config::load_tmux().map_err(|error| io::Error::other(error.to_string()))?;
     let mut app = App::new(discovery::discover()?, variant, config);
     app.nerd_icons = Command::new("tmux")
-        .args(["show-option", "-gqv", "@agent-watch-icon-mode"])
+        .args(["show-option", "-gqv", "@drudwyn-icon-mode"])
         .output()
         .is_ok_and(|output| {
             output.status.success() && String::from_utf8_lossy(&output.stdout).trim() == "nerd"

@@ -11,21 +11,21 @@ branch="${1:-}"
 [ -n "$branch" ] && [ "$#" -eq 1 ] || usage
 
 repo="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-  printf 'agent-watch: current directory is not inside a Git repository\n' >&2
+  printf 'drudwyn: current directory is not inside a Git repository\n' >&2
   exit 1
 }
 repo_name="${repo##*/}"
-worktree_root="${AGENT_WATCH_WORKTREE_ROOT:-${repo%/*}/${repo_name}-worktrees}"
+worktree_root="${DRUDWYN_WORKTREE_ROOT:-${repo%/*}/${repo_name}-worktrees}"
 slug="${branch//\//-}"
 worktree="$worktree_root/$slug"
 
 [ -d "$worktree" ] || {
-  printf 'agent-watch: worktree does not exist: %s\n' "$worktree" >&2
+  printf 'drudwyn: worktree does not exist: %s\n' "$worktree" >&2
   exit 1
 }
 actual_branch="$(git -C "$worktree" branch --show-current 2>/dev/null || true)"
 [ "$actual_branch" = "$branch" ] || {
-  printf 'agent-watch: %s contains branch %s, not %s\n' \
+  printf 'drudwyn: %s contains branch %s, not %s\n' \
     "$worktree" "${actual_branch:-<detached>}" "$branch" >&2
   exit 1
 }
@@ -34,7 +34,7 @@ window_ids="$(tmux list-panes -a -F '#{window_id}|#{pane_current_path}' 2>/dev/n
   awk -F '|' -v path="$worktree" '$2 == path && !seen[$1]++ { print $1 }' || true)"
 
 if ! git -C "$repo" worktree remove "$worktree"; then
-  printf 'agent-watch: worktree was not removed; commit or discard its changes first\n' >&2
+  printf 'drudwyn: worktree was not removed; commit or discard its changes first\n' >&2
   exit 1
 fi
 

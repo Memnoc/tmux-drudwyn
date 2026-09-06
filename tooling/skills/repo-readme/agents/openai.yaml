@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repository README"
+  short_description: "Create clear READMEs in the Drudwyn presentation style"
+  default_prompt: "Use $repo-readme to give this repository a clear branded README and documentation index."

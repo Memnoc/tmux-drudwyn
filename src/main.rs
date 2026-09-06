@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use std::{io::Read, path::PathBuf};
-use tmux_agent_watch::{
+use tmux_drudwyn::{
     ambient, cockpit,
     config::Config,
     discovery,
@@ -128,7 +128,7 @@ impl From<ThemeArg> for Variant {
 
 fn main() {
     if let Err(error) = run(Cli::parse()) {
-        eprintln!("tmux-agent-watch: {error}");
+        eprintln!("tmux-drudwyn: {error}");
         std::process::exit(1);
     }
 }
@@ -206,7 +206,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                 command,
             } => {
                 let root = worktree_root
-                    .or_else(|| std::env::var_os("AGENT_WATCH_WORKTREE_ROOT").map(PathBuf::from));
+                    .or_else(|| std::env::var_os("DRUDWYN_WORKTREE_ROOT").map(PathBuf::from));
                 println!(
                     "{}",
                     workspace::start(Start {

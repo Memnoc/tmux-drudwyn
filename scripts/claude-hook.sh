@@ -4,7 +4,7 @@ set -eu
 source "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)/lib.sh"
 
 event="${1:-}"
-if [ "$(tmux_option @agent-watch-v2 on)" = on ]; then
+if [ "$(tmux_option @drudwyn-v2 on)" = on ]; then
   exec "$PLUGIN_DIR/scripts/v2.sh" hook claude "$event"
 fi
 payload="$(cat)"

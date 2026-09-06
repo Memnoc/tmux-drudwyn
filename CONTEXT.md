@@ -32,4 +32,4 @@ Non-content state needed to operate the current tmux session: workspace identifi
 
 ### Review
 
-Returning to the authoritative agent workspace to inspect and continue the work. Review is tool-agnostic; tmux-agent-watch does not prescribe a Git user interface.
+Returning to the authoritative agent workspace to inspect and continue the work. Review is tool-agnostic; tmux-drudwyn does not prescribe a Git user interface.

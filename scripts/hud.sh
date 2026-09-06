@@ -3,9 +3,9 @@
 set -u
 
 PLUGIN_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
-v2="$(tmux show-option -gqv @agent-watch-v2 2>/dev/null || true)"
+v2="$(tmux show-option -gqv @drudwyn-v2 2>/dev/null || true)"
 if [ "${v2:-on}" = on ]; then
-  theme="$(tmux show-option -gqv @agent-watch-theme 2>/dev/null || true)"
+  theme="$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)"
   exec "$PLUGIN_DIR/scripts/v2.sh" hud "$1" "${2:-}" "${3:-}" "${theme:-moon}"
 fi
 
@@ -45,7 +45,7 @@ age() {
 
 case "$mode" in
   fleet)
-    rows="$(tmux list-windows -t "$session" -F '#{@agent_watch_state}|#{@agent_watch_attention_since}' 2>/dev/null || true)"
+    rows="$(tmux list-windows -t "$session" -F '#{@drudwyn_state}|#{@drudwyn_attention_since}' 2>/dev/null || true)"
     agents="$(printf '%s\n' "$rows" | awk -F '|' '$1!="" {n++} END {print n+0}')"
     working="$(printf '%s\n' "$rows" | awk -F '|' '$1=="working" {n++} END {print n+0}')"
     waiting="$(printf '%s\n' "$rows" | awk -F '|' '$1=="needs_input" {n++} END {print n+0}')"
@@ -58,14 +58,14 @@ case "$mode" in
     [ "$failed" -gt 0 ] && printf '  #[fg=#eb6f92]● %s failed#[default]' "$failed"
     ;;
   selected)
-    details="$(tmux display-message -p -t "$window_id" '#{window_name}|#{@agent_watch_state}|#{@agent_watch_since}' 2>/dev/null || true)"
+    details="$(tmux display-message -p -t "$window_id" '#{window_name}|#{@drudwyn_state}|#{@drudwyn_since}' 2>/dev/null || true)"
     IFS='|' read -r name state since <<< "$details"
     color="$(state_color "$state")"
     printf '#[fg=#e0def4,bold] %s#[default]' "${name:-shell}"
     printf '  #[fg=%s,bold]%s#[default] #[fg=#908caa]· %s#[default]' "$color" "$(state_label "$state")" "$(age "$since")"
     ;;
   summary)
-    message="$(tmux show-option -wqv -t "$window_id" @agent_watch_message 2>/dev/null || true)"
+    message="$(tmux show-option -wqv -t "$window_id" @drudwyn_message 2>/dev/null || true)"
     if [ -n "$message" ]; then
       printf '#[fg=#908caa] ↳ #[fg=#e0def4]%s#[default]' "$message"
     else

@@ -8,8 +8,8 @@ set -eu
 session="${1:-}"
 current="${2:-}"
 width="${3:-120}"
-icon_mode="$(tmux show-option -gqv @agent-watch-icon-mode 2>/dev/null || true)"
-theme="$(tmux show-option -gqv @agent-watch-theme 2>/dev/null || true)"
+icon_mode="$(tmux show-option -gqv @drudwyn-icon-mode 2>/dev/null || true)"
+theme="$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)"
 
 case "${theme:-moon}" in
   dawn) base='#faf4ed'; surface='#f2e9e1'; highlight='#dfdad9'; text='#575279'; subtle='#797593'; muted='#9893a5'; love='#b4637a'; gold='#ea9d34'; rose='#d7827e'; pine='#286983'; foam='#56949f'; iris='#907aa9' ;;
@@ -135,7 +135,7 @@ EOF
 }
 
 rows="$(tmux list-windows -t "$session" \
-  -F '#{window_index}|#{window_id}|#{window_name}|#{window_active}|#{@agent_watch_state}|#{@agent_watch_branch}|#{@agent_watch_repo}|#{@agent_watch_git_status}|#{pane_current_path}|#{@agent_watch_since}|#{@agent_watch_context_repo}' \
+  -F '#{window_index}|#{window_id}|#{window_name}|#{window_active}|#{@drudwyn_state}|#{@drudwyn_branch}|#{@drudwyn_repo}|#{@drudwyn_git_status}|#{pane_current_path}|#{@drudwyn_since}|#{@drudwyn_context_repo}' \
   2>/dev/null || true)"
 current_is_agent="$(printf '%s\n' "$rows" | awk -F'|' -v id="$current" '$2 == id && $5 != "" { print 1; exit }')"
 

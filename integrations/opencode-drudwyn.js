@@ -1,6 +1,6 @@
-const hook = "/path/to/tmux-agent-watch/scripts/opencode-hook.sh"
+const hook = "/path/to/tmux-drudwyn/scripts/opencode-hook.sh"
 
-export const TmuxAgentWatch = async ({ $ }) => {
+export const TmuxDrudwyn = async ({ $ }) => {
   const publish = async (state) => {
     await $`${hook} ${state}`.quiet()
   }

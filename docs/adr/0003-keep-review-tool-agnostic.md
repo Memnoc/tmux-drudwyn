@@ -24,6 +24,6 @@ guarded commands owned by the Rust binary.
 
 ## Consequences
 
-The `g` binding and `@agent-watch-lazygit-key` option are removed. Users retain
+The `g` binding and `@drudwyn-lazygit-key` option are removed. Users retain
 their existing tmux, shell, editor, and Git tools inside the selected workspace.
 The cockpit stays focused on navigation and workspace lifecycle orchestration.

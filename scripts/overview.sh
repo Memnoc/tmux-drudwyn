@@ -7,7 +7,7 @@ tmp_file="$(mktemp)"
 choices_file="${tmp_file}.choices"
 trap 'rm -f "$tmp_file" "$choices_file"' EXIT
 
-tmux list-windows -a -F '#{session_name}|#{window_id}|#{window_name}|#{@agent_watch_state}|#{@agent_watch_since}|#{@agent_watch_message}' |
+tmux list-windows -a -F '#{session_name}|#{window_id}|#{window_name}|#{@drudwyn_state}|#{@drudwyn_since}|#{@drudwyn_message}' |
   awk -F '|' '$4 != ""' > "$tmp_file"
 
 if [ ! -s "$tmp_file" ]; then

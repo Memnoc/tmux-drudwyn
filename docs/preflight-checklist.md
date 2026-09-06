@@ -20,12 +20,12 @@ cannot publish a GitHub Release.
 4. Run `sha256sum --check SHA256SUMS` on Linux or
    `shasum -a 256 --check SHA256SUMS` on macOS.
 5. Install the archive matching each available test machine through
-   `install.sh` using `TMUX_AGENT_WATCH_BASE_URL` pointed at a local HTTP or
-   file URL. Confirm `tmux-agent-watch --version` matches `Cargo.toml`.
+   `install.sh` using `TMUX_DRUDWYN_BASE_URL` pointed at a local HTTP or
+   file URL. Confirm `tmux-drudwyn --version` matches `Cargo.toml`.
 
 ## Fresh-install acceptance
 
-- Start a clean tmux server with no `@agent-watch-v2` option and reload the
+- Start a clean tmux server with no `@drudwyn-v2` option and reload the
   plugin. Confirm the Rust cockpit opens with `prefix + P`.
 - Confirm the clustered status bar separates workspaces and agents, renders Git
   context, and shows overflow without creating project-controlled state.
@@ -42,8 +42,8 @@ cannot publish a GitHub Release.
 ## Migration and recovery
 
 - Upgrade an existing v1 tmux configuration without adding
-  `@agent-watch-v2`; confirm v2 becomes active after reload.
-- Set `@agent-watch-v2 off`, reload, and confirm the legacy cockpit, scanner,
+  `@drudwyn-v2`; confirm v2 becomes active after reload.
+- Set `@drudwyn-v2 off`, reload, and confirm the legacy cockpit, scanner,
   hooks, HUD, optional sidebar, and workspace commands remain usable.
 - Test a missing binary, invalid agent option, invalid branch prefix, stale
   sidebar pane, killed agent pane, tmux client reconnect, and plugin reload.
@@ -54,7 +54,7 @@ cannot publish a GitHub Release.
 - Enter a distinctive private task and confirm it is absent from tmux options,
   buffers, server environment, process arguments, and project files after
   delivery.
-- Enable `@agent-watch-redact-labels on`; confirm cockpit and start/finish forms
+- Enable `@drudwyn-redact-labels on`; confirm cockpit and start/finish forms
   hide task, repository, branch, session, and window labels while navigation
   and content-blind status signals still work.
 - Confirm no unexpected network connection, telemetry, log, database, history,

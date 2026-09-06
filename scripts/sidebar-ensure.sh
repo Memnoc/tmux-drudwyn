@@ -3,7 +3,7 @@
 set -u
 source "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)/lib.sh"
 
-[ "$(tmux_option @agent-watch-sidebar off)" = on ] || exit 0
+[ "$(tmux_option @drudwyn-sidebar off)" = on ] || exit 0
 
 target="${1:-${TMUX_PANE:-}}"
 [ -n "$target" ] || target="$(tmux display-message -p '#{pane_id}' 2>/dev/null || true)"
@@ -13,22 +13,22 @@ session="$(tmux display-message -p -t "$target" '#{session_name}' 2>/dev/null ||
 target_pane="$(tmux display-message -p -t "$target" '#{pane_id}' 2>/dev/null || true)"
 target_window="$(tmux display-message -p -t "$target" '#{window_id}' 2>/dev/null || true)"
 [ -n "$session" ] && [ -n "$target_pane" ] || exit 0
-target_state="$(tmux show-option -wqv -t "$target_window" @agent_watch_state 2>/dev/null || true)"
+target_state="$(tmux show-option -wqv -t "$target_window" @drudwyn_state 2>/dev/null || true)"
 [ -n "$target_state" ] || exit 0
 target_name="$(tmux display-message -p -t "$target_window" '#{window_name}')"
 target_auto="$(tmux display-message -p -t "$target_window" '#{automatic-rename}')"
 
-sidebar="$(tmux show-option -qv -t "$session" @agent_watch_sidebar_pane 2>/dev/null || true)"
+sidebar="$(tmux show-option -qv -t "$session" @drudwyn_sidebar_pane 2>/dev/null || true)"
 if [ -n "$sidebar" ] && ! tmux display-message -p -t "$sidebar" '#{pane_id}' >/dev/null 2>&1; then
   sidebar=''
-  tmux set-option -q -t "$session" @agent_watch_sidebar_pane ''
+  tmux set-option -q -t "$session" @drudwyn_sidebar_pane ''
 fi
 
-expanded="$(tmux show-option -qv -t "$session" @agent_watch_sidebar_expanded 2>/dev/null || true)"
+expanded="$(tmux show-option -qv -t "$session" @drudwyn_sidebar_expanded 2>/dev/null || true)"
 if [ "$expanded" = on ]; then
-  width="$(tmux_option @agent-watch-sidebar-expanded-width 38)"
+  width="$(tmux_option @drudwyn-sidebar-expanded-width 38)"
 else
-  width="$(tmux_option @agent-watch-sidebar-width 3)"
+  width="$(tmux_option @drudwyn-sidebar-width 3)"
 fi
 
 if [ -n "$sidebar" ]; then
@@ -54,15 +54,15 @@ if [ -n "$sidebar" ]; then
   exit 0
 fi
 
-if [ "$(tmux_option @agent-watch-v2 on)" = on ]; then
+if [ "$(tmux_option @drudwyn-v2 on)" = on ]; then
   renderer="$PLUGIN_DIR/scripts/sidebar-v2.sh '$session'"
 else
   renderer="$PLUGIN_DIR/scripts/sidebar-render.sh '$session'"
 fi
 sidebar="$(tmux split-window -d -b -h -l "$width" -t "$target_pane" -P -F '#{pane_id}' \
   "$renderer")" || exit 0
-tmux set-option -pq -t "$sidebar" @agent_watch_sidebar 1
-tmux set-option -q -t "$session" @agent_watch_sidebar_pane "$sidebar"
+tmux set-option -pq -t "$sidebar" @drudwyn_sidebar 1
+tmux set-option -q -t "$session" @drudwyn_sidebar_pane "$sidebar"
 tmux select-pane -t "$target_pane"
 tmux rename-window -t "$target_window" "$target_name"
 tmux set-window-option -q -t "$target_window" automatic-rename "$target_auto"

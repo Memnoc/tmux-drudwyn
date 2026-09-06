@@ -24,7 +24,7 @@
   <a href="#use">Shortcuts</a> ·
   <a href="#agent-integrations">Agents</a> ·
   <a href="docs/README.md">Docs</a> ·
-  <a href="https://github.com/Memnoc/tmux-agent-watch/releases">Releases</a> ·
+  <a href="https://github.com/Memnoc/tmux-drudwyn/releases">Releases</a> ·
   <a href="docs/privacy.md">Privacy</a>
 </p>
 
@@ -44,7 +44,7 @@ This checkout uses the v2 Rust implementation; building it requires Rust and Car
 **1. Add the plugin.** With [TPM](https://github.com/tmux-plugins/tpm), add this to `~/.tmux.conf` before TPM is loaded:
 
 ```tmux
-set -g @plugin 'memnoc/tmux-agent-watch'
+set -g @plugin 'memnoc/tmux-drudwyn'
 ```
 
 Reload your configuration, then press `prefix + I` to install the plugin:
@@ -56,7 +56,7 @@ tmux source-file ~/.tmux.conf
 **2. Build this checkout.** TPM installs the scripts but does not compile the binary:
 
 ```sh
-cargo build --release --locked --manifest-path ~/.tmux/plugins/tmux-agent-watch/Cargo.toml
+cargo build --release --locked --manifest-path ~/.tmux/plugins/tmux-drudwyn/Cargo.toml
 ```
 
 **3. Open the cockpit.** Reload from a terminal inside tmux:

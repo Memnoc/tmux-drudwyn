@@ -10,9 +10,9 @@ use crate::domain::{
 // printable Unicode symbol survives argv and tmux formatting unchanged.
 const FIELD_SEPARATOR: char = '\u{241f}';
 
-// Intentionally excludes @agent_watch_message and pane content. This format is
+// Intentionally excludes @drudwyn_message and pane content. This format is
 // part of the project's content-blind privacy boundary.
-const WINDOW_FORMAT: &str = "#{session_name}␟#{window_id}␟#{window_name}␟#{pane_id}␟#{pane_current_path}␟#{pane_current_command}␟#{@agent_watch_state}␟#{@agent_watch_source}␟#{@agent_watch_since}␟#{@agent_watch_attention_since}␟#{@agent_watch_repo}␟#{@agent_watch_worktree}␟#{@agent_watch_branch}␟#{@agent_watch_git_status}";
+const WINDOW_FORMAT: &str = "#{session_name}␟#{window_id}␟#{window_name}␟#{pane_id}␟#{pane_current_path}␟#{pane_current_command}␟#{@drudwyn_state}␟#{@drudwyn_source}␟#{@drudwyn_since}␟#{@drudwyn_attention_since}␟#{@drudwyn_repo}␟#{@drudwyn_worktree}␟#{@drudwyn_branch}␟#{@drudwyn_git_status}";
 
 #[derive(Debug, Error)]
 pub enum DiscoveryError {
@@ -187,14 +187,14 @@ mod tests {
     fn tmux_discovery_format_is_content_blind() {
         for forbidden in [
             "capture-pane",
-            "@agent_watch_message",
+            "@drudwyn_message",
             "pane_history",
             "pane_title",
             "command_arguments",
         ] {
             assert!(!WINDOW_FORMAT.contains(forbidden), "requested {forbidden}");
         }
-        assert!(WINDOW_FORMAT.contains("@agent_watch_state"));
+        assert!(WINDOW_FORMAT.contains("@drudwyn_state"));
         assert!(WINDOW_FORMAT.contains("pane_current_path"));
     }
 }

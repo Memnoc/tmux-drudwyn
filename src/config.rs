@@ -35,10 +35,10 @@ impl Config {
     pub fn load_tmux() -> Result<Self, ConfigError> {
         let mut options = Vec::new();
         for name in [
-            "@agent-watch-base-branch",
-            "@agent-watch-agent",
-            "@agent-watch-branch-prefix",
-            "@agent-watch-redact-labels",
+            "@drudwyn-base-branch",
+            "@drudwyn-agent",
+            "@drudwyn-branch-prefix",
+            "@drudwyn-redact-labels",
         ] {
             let output = Command::new("tmux")
                 .args(["show-option", "-gqv", name])
@@ -64,26 +64,26 @@ impl Config {
             .map(|(key, value)| (key.as_ref().to_owned(), value.as_ref().to_owned()))
             .collect::<HashMap<_, _>>();
         let mut config = Self::default();
-        if let Some(value) = values.get("@agent-watch-base-branch") {
-            config.base_branch = nonempty("@agent-watch-base-branch", value)?;
+        if let Some(value) = values.get("@drudwyn-base-branch") {
+            config.base_branch = nonempty("@drudwyn-base-branch", value)?;
         }
-        if let Some(value) = values.get("@agent-watch-branch-prefix") {
-            config.branch_prefix = nonempty("@agent-watch-branch-prefix", value)?;
+        if let Some(value) = values.get("@drudwyn-branch-prefix") {
+            config.branch_prefix = nonempty("@drudwyn-branch-prefix", value)?;
         }
-        if let Some(value) = values.get("@agent-watch-agent") {
+        if let Some(value) = values.get("@drudwyn-agent") {
             config.default_agent =
                 AgentKind::from_command(value).ok_or_else(|| ConfigError::Invalid {
-                    option: "@agent-watch-agent".into(),
+                    option: "@drudwyn-agent".into(),
                     value: value.clone(),
                 })?;
         }
-        if let Some(value) = values.get("@agent-watch-redact-labels") {
+        if let Some(value) = values.get("@drudwyn-redact-labels") {
             config.redact_labels = match value.as_str() {
                 "on" | "true" | "1" => true,
                 "off" | "false" | "0" => false,
                 _ => {
                     return Err(ConfigError::Invalid {
-                        option: "@agent-watch-redact-labels".into(),
+                        option: "@drudwyn-redact-labels".into(),
                         value: value.clone(),
                     });
                 }
@@ -109,10 +109,10 @@ mod tests {
     #[test]
     fn parses_typed_tmux_configuration() {
         let config = Config::from_options([
-            ("@agent-watch-base-branch", "trunk"),
-            ("@agent-watch-agent", "claude"),
-            ("@agent-watch-branch-prefix", "quick-win/"),
-            ("@agent-watch-redact-labels", "on"),
+            ("@drudwyn-base-branch", "trunk"),
+            ("@drudwyn-agent", "claude"),
+            ("@drudwyn-branch-prefix", "quick-win/"),
+            ("@drudwyn-redact-labels", "on"),
         ])
         .expect("valid options");
         assert_eq!(config.base_branch, "trunk");
@@ -123,8 +123,8 @@ mod tests {
 
     #[test]
     fn rejects_invalid_typed_tmux_configuration() {
-        let error = Config::from_options([("@agent-watch-agent", "vim")])
+        let error = Config::from_options([("@drudwyn-agent", "vim")])
             .expect_err("unknown agent must be rejected");
-        assert!(error.to_string().contains("@agent-watch-agent"));
+        assert!(error.to_string().contains("@drudwyn-agent"));
     }
 }

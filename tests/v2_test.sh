@@ -3,7 +3,7 @@
 set -eu
 
 ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
-SOCKET="agent-watch-v2-$$"
+SOCKET="drudwyn-v2-$$"
 TMP_DIR="$(mktemp -d)"
 
 cargo build --offline --manifest-path "$ROOT/Cargo.toml" >/dev/null
@@ -15,8 +15,8 @@ cleanup() {
 trap cleanup EXIT
 
 tmux -L "$SOCKET" -f /dev/null new-session -d -s v2
-tmux -L "$SOCKET" set-option -g @agent-watch-hud off
-tmux -L "$SOCKET" run-shell "$ROOT/tmux-agent-watch.tmux"
+tmux -L "$SOCKET" set-option -g @drudwyn-hud off
+tmux -L "$SOCKET" run-shell "$ROOT/tmux-drudwyn.tmux"
 
 binding="$(tmux -L "$SOCKET" list-keys -T prefix | awk '$4 == "P" && /scripts\/v2.sh cockpit/')"
 [ -n "$binding" ] || {
@@ -25,8 +25,8 @@ binding="$(tmux -L "$SOCKET" list-keys -T prefix | awk '$4 == "P" && /scripts\/v
 }
 printf 'ok: v2 cockpit is the default on the existing cockpit key\n'
 
-tmux -L "$SOCKET" set-option -g @agent-watch-v2 off
-tmux -L "$SOCKET" run-shell "$ROOT/tmux-agent-watch.tmux"
+tmux -L "$SOCKET" set-option -g @drudwyn-v2 off
+tmux -L "$SOCKET" run-shell "$ROOT/tmux-drudwyn.tmux"
 binding="$(tmux -L "$SOCKET" list-keys -T prefix | awk '$4 == "P" && /scripts\/cockpit.sh/')"
 [ -n "$binding" ] || {
   printf 'not ok: disabling v2 did not restore the v1 cockpit\n'
@@ -34,17 +34,17 @@ binding="$(tmux -L "$SOCKET" list-keys -T prefix | awk '$4 == "P" && /scripts\/c
 }
 printf 'ok: v1 cockpit remains available as an explicit fallback\n'
 
-fake_binary="$TMP_DIR/tmux-agent-watch"
+fake_binary="$TMP_DIR/tmux-drudwyn"
 apply_theme="$TMP_DIR/theme"
 sed "s|OUTPUT_PATH|$apply_theme|" > "$fake_binary" <<'SCRIPT'
 #!/usr/bin/env bash
 printf '%s\n' "$*" > 'OUTPUT_PATH'
 SCRIPT
 chmod +x "$fake_binary"
-tmux -L "$SOCKET" set-option -g @agent-watch-theme dawn
+tmux -L "$SOCKET" set-option -g @drudwyn-theme dawn
 socket_path="$(tmux -L "$SOCKET" display-message -p '#{socket_path}')"
 server_pid="$(tmux -L "$SOCKET" display-message -p '#{pid}')"
-TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$fake_binary" "$ROOT/scripts/v2.sh" cockpit
+TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$fake_binary" "$ROOT/scripts/v2.sh" cockpit
 [ "$(cat "$apply_theme")" = 'cockpit --theme dawn' ] || {
   printf 'not ok: v2 launcher did not forward the selected theme\n'
   exit 1
@@ -52,7 +52,7 @@ TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$fake_binary" "$ROOT/scrip
 printf 'ok: v2 launcher forwards the Rose Pine theme variant\n'
 
 before="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)"
-TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$fake_binary" "$ROOT/scripts/v2.sh" status
+TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$fake_binary" "$ROOT/scripts/v2.sh" status
 after="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)"
 [ "$before" = "$after" ] || {
   printf 'not ok: launcher created unexpected persistent state\n'
@@ -60,23 +60,23 @@ after="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)"
 }
 printf 'ok: v2 launcher creates no project-controlled state\n'
 
-real_binary="$ROOT/target/debug/tmux-agent-watch"
+real_binary="$ROOT/target/debug/tmux-drudwyn"
 [ -x "$real_binary" ] || {
   printf 'not ok: Rust debug binary is unavailable for lifecycle integration\n'
   exit 1
 }
-watcher_pid="$(tmux -L "$SOCKET" show-option -gqv @agent_watch_watcher_pid 2>/dev/null || true)"
+watcher_pid="$(tmux -L "$SOCKET" show-option -gqv @drudwyn_watcher_pid 2>/dev/null || true)"
 [ -z "$watcher_pid" ] || kill "$watcher_pid" 2>/dev/null || true
-tmux -L "$SOCKET" set-option -gq @agent_watch_watcher_pid ''
-tmux -L "$SOCKET" set-option -g @agent-watch-v2 on
+tmux -L "$SOCKET" set-option -gq @drudwyn_watcher_pid ''
+tmux -L "$SOCKET" set-option -g @drudwyn-v2 on
 ln -s "$(command -v sleep)" "$TMP_DIR/codex"
 tmux -L "$SOCKET" new-window -d -t v2 -n agent "$TMP_DIR/codex 30"
 agent_pane="$(tmux -L "$SOCKET" list-panes -t v2:agent -F '#{pane_id}' | head -n 1)"
 agent_window="$(tmux -L "$SOCKET" display-message -p -t "$agent_pane" '#{window_id}')"
-tmux -L "$SOCKET" set-option -wq -t "$agent_window" @agent_watch_message 'sensitive legacy summary'
-TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" "$ROOT/scripts/v2.sh" scan
-state="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @agent_watch_state)"
-message="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @agent_watch_message)"
+tmux -L "$SOCKET" set-option -wq -t "$agent_window" @drudwyn_message 'sensitive legacy summary'
+TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" "$ROOT/scripts/v2.sh" scan
+state="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_state)"
+message="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_message)"
 [ "$state" = working ] && [ -z "$message" ] || {
   printf 'not ok: v2 scan did not classify the process and erase legacy content\n'
   exit 1
@@ -84,10 +84,10 @@ message="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @agent_watch_me
 printf 'ok: v2 scan classifies process identity and erases legacy content\n'
 
 printf '%s' '{"prompt":"private customer material"}' |
-  TMUX="$socket_path,$server_pid,0" TMUX_PANE="$agent_pane" AGENT_WATCH_V2_BIN="$real_binary" \
+  TMUX="$socket_path,$server_pid,0" TMUX_PANE="$agent_pane" DRUDWYN_V2_BIN="$real_binary" \
   "$ROOT/scripts/codex-hook.sh" permissionRequest
-state="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @agent_watch_state)"
-message="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @agent_watch_message)"
+state="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_state)"
+message="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_message)"
 [ -z "$message" ] || {
   printf 'not ok: v2 hook retained payload content or mapped the event incorrectly\n'
   exit 1
@@ -101,31 +101,31 @@ after_hook="$(tmux -L "$SOCKET" show-options -wv -t "$agent_window" | grep -F 'p
 }
 printf 'ok: hook payload is absent from all tmux window options\n'
 
-tmux -L "$SOCKET" set-option -wq -t "$agent_window" @agent_watch_state needs_input
+tmux -L "$SOCKET" set-option -wq -t "$agent_window" @drudwyn_state needs_input
 
-fleet="$(TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" \
+fleet="$(TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" \
   "$ROOT/scripts/v2.sh" hud fleet v2 "$agent_window" moon)"
 printf '%s' "$fleet" | grep -Fq 'WAITING 1' || {
   printf 'not ok: v2 HUD did not project the live fleet\n'
   exit 1
 }
-if tmux -L "$SOCKET" show-option -qv -t v2 @agent_watch_sidebar_pane | grep -q .; then
+if tmux -L "$SOCKET" show-option -qv -t v2 @drudwyn_sidebar_pane | grep -q .; then
   printf 'not ok: v2 created a sidebar without an explicit opt-in\n'
   exit 1
 fi
 printf 'ok: v2 HUD projects attention without creating a sidebar\n'
 
 legacy_sidebar="$(tmux -L "$SOCKET" split-window -d -P -F '#{pane_id}' -t v2:)"
-tmux -L "$SOCKET" set-option -pq -t "$legacy_sidebar" @agent_watch_sidebar 1
-tmux -L "$SOCKET" set-option -q -t v2 @agent_watch_sidebar_pane "$legacy_sidebar"
-tmux -L "$SOCKET" run-shell "$ROOT/tmux-agent-watch.tmux"
+tmux -L "$SOCKET" set-option -pq -t "$legacy_sidebar" @drudwyn_sidebar 1
+tmux -L "$SOCKET" set-option -q -t v2 @drudwyn_sidebar_pane "$legacy_sidebar"
+tmux -L "$SOCKET" run-shell "$ROOT/tmux-drudwyn.tmux"
 if tmux -L "$SOCKET" list-panes -a -F '#{pane_id}' | grep -Fxq "$legacy_sidebar"; then
   printf 'not ok: disabling the sidebar left a generated pane behind\n'
   exit 1
 fi
 printf 'ok: disabling the sidebar removes only its generated pane\n'
 
-sidebar="$(TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" \
+sidebar="$(TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" \
   "$ROOT/scripts/v2.sh" sidebar v2 "$agent_window" --expanded --theme moon)"
 frame="${sidebar%$'\034'*}"
 click_map="${sidebar##*$'\034'}"
@@ -139,8 +139,8 @@ printf '%s' "$click_map" | grep -Fq "=$agent_window;" || {
 }
 printf 'ok: v2 sidebar projects fixed metadata with click navigation\n'
 
-tmux -L "$SOCKET" set-option -g @agent-watch-redact-labels on
-redacted="$(TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" \
+tmux -L "$SOCKET" set-option -g @drudwyn-redact-labels on
+redacted="$(TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" \
   "$ROOT/scripts/v2.sh" sidebar v2 "$agent_window" --expanded --theme moon)"
 redacted_frame="${redacted%$'\034'*}"
 redacted_map="${redacted##*$'\034'}"
@@ -153,14 +153,14 @@ printf '%s' "$redacted_frame" | grep -Fq 'Workspace' &&
   printf 'not ok: redacted sidebar lost its private label or navigation map\n'
   exit 1
 }
-tmux -L "$SOCKET" set-option -g @agent-watch-redact-labels off
+tmux -L "$SOCKET" set-option -g @drudwyn-redact-labels off
 printf 'ok: display redaction hides labels without breaking navigation\n'
 
 repo="$TMP_DIR/repo"
 worktree_root="$TMP_DIR/worktrees"
 git init -q "$repo"
-git -C "$repo" config user.name 'Agent Watch Test'
-git -C "$repo" config user.email 'agent-watch@example.invalid'
+git -C "$repo" config user.name 'Drudwyn Test'
+git -C "$repo" config user.email 'drudwyn@example.invalid'
 touch "$repo/README.md"
 git -C "$repo" add README.md
 git -C "$repo" commit -qm initial
@@ -183,8 +183,8 @@ fi
 }
 printf 'ok: failed metadata attachment rolls back its worktree and branch\n'
 
-TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" \
-  AGENT_WATCH_WORKTREE_ROOT="$worktree_root" "$ROOT/scripts/worktree-new.sh" \
+TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" \
+  DRUDWYN_WORKTREE_ROOT="$worktree_root" "$ROOT/scripts/worktree-new.sh" \
   --repo "$repo" work/exits-immediately false >/dev/null 2>&1 || true
 sleep 0.2
 if git -C "$repo" show-ref --verify --quiet refs/heads/work/exits-immediately ||
@@ -199,8 +199,8 @@ git -C "$repo" switch -qc ux/pilot
 printf 'pilot\n' > "$repo/PILOT.md"
 git -C "$repo" add PILOT.md
 git -C "$repo" commit -qm pilot
-no_change="$(TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" \
-  AGENT_WATCH_WORKTREE_ROOT="$worktree_root" "$ROOT/scripts/worktree-new.sh" \
+no_change="$(TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" \
+  DRUDWYN_WORKTREE_ROOT="$worktree_root" "$ROOT/scripts/worktree-new.sh" \
   --repo "$repo" work/no-change "$TMP_DIR/codex" 30)"
 TMUX="$socket_path,$server_pid,0" "$real_binary" workspace finish \
   --path "$no_change" --base main --yes >/dev/null
@@ -210,8 +210,8 @@ TMUX="$socket_path,$server_pid,0" "$real_binary" workspace finish \
 }
 printf 'ok: finish accepts work already contained by the primary checkout\n'
 
-created="$(TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" \
-  AGENT_WATCH_WORKTREE_ROOT="$worktree_root" "$ROOT/scripts/worktree-new.sh" \
+created="$(TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" \
+  DRUDWYN_WORKTREE_ROOT="$worktree_root" "$ROOT/scripts/worktree-new.sh" \
   --repo "$repo" work/privacy "$TMP_DIR/codex" 30)"
 [ "$created" = "$worktree_root/work-privacy" ] &&
   [ "$(git -C "$created" branch --show-current)" = work/privacy ] || {
@@ -219,7 +219,7 @@ created="$(TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" \
   exit 1
 }
 created_window="$(tmux -L "$SOCKET" display-message -p -t v2:work-privacy '#{window_id}')"
-[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @agent_watch_message)" = '' ] || {
+[ "$(tmux -L "$SOCKET" show-option -wqv -t "$created_window" @drudwyn_message)" = '' ] || {
   printf 'not ok: v2 start created content-bearing tmux state\n'
   exit 1
 }
@@ -244,7 +244,7 @@ fi
 git -C "$repo" worktree remove "$detached"
 printf 'ok: v2 finish refuses a detached worktree\n'
 
-linked_created="$(TMUX="$socket_path,$server_pid,0" AGENT_WATCH_V2_BIN="$real_binary" \
+linked_created="$(TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" \
   "$ROOT/scripts/worktree-new.sh" --repo "$created" work/from-linked "$TMP_DIR/codex" 30)"
 [ "$linked_created" = "$TMP_DIR/repo-worktrees/work-from-linked" ] || {
   printf 'not ok: start from a linked worktree nested its worktree root: %s\n' "$linked_created"
@@ -276,7 +276,7 @@ printf 'ok: task delivery is transient at the CLI-to-tmux outer seam\n'
 
 printf dirty >> "$created/README.md"
 if (cd "$created" && printf 'y\n' | TMUX="$socket_path,$server_pid,0" \
-  AGENT_WATCH_V2_BIN="$real_binary" "$ROOT/scripts/worktree-finish.sh") >/dev/null 2>&1; then
+  DRUDWYN_V2_BIN="$real_binary" "$ROOT/scripts/worktree-finish.sh") >/dev/null 2>&1; then
   printf 'not ok: v2 finish removed a dirty worktree\n'
   exit 1
 fi
@@ -289,7 +289,7 @@ empty_tree="$(printf '' | git -C "$repo" mktree)"
 unrelated_commit="$(printf 'unrelated history\n' | git -C "$repo" commit-tree "$empty_tree")"
 git -C "$repo" tag work/privacy "$unrelated_commit"
 removed="$(cd "$created" && printf 'y\n' | TMUX="$socket_path,$server_pid,0" \
-  AGENT_WATCH_V2_BIN="$real_binary" "$ROOT/scripts/worktree-finish.sh")"
+  DRUDWYN_V2_BIN="$real_binary" "$ROOT/scripts/worktree-finish.sh")"
 [ "$removed" = "$created" ] && [ ! -e "$created" ] || {
   printf 'not ok: v2 finish did not remove the eligible worktree\n'
   exit 1

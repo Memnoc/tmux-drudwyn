@@ -122,11 +122,11 @@ pub fn start(request: Start) -> Result<Started, Error> {
     };
     let initialize = || -> Result<(), Error> {
         for (name, value) in [
-            ("@agent_watch_branch", request.branch.as_str()),
-            ("@agent_watch_worktree", target.to_str().unwrap_or("")),
-            ("@agent_watch_repo", repo.to_str().unwrap_or("")),
-            ("@agent_watch_git_status", "clean"),
-            ("@agent_watch_message", ""),
+            ("@drudwyn_branch", request.branch.as_str()),
+            ("@drudwyn_worktree", target.to_str().unwrap_or("")),
+            ("@drudwyn_repo", repo.to_str().unwrap_or("")),
+            ("@drudwyn_git_status", "clean"),
+            ("@drudwyn_message", ""),
         ] {
             tmux_ok(Command::new("tmux").args(["set-option", "-wq", "-t", &window, name, value]))?;
         }
@@ -180,7 +180,7 @@ pub fn deliver_task(window_id: &str, task: &str) -> Result<(), Error> {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
-    let buffer = format!("agent-watch-task-{}-{nonce}", std::process::id());
+    let buffer = format!("drudwyn-task-{}-{nonce}", std::process::id());
     let mut child = Command::new("tmux")
         .args(["load-buffer", "-b", &buffer, "-"])
         .stdin(Stdio::piped())
@@ -281,7 +281,7 @@ pub fn finish(path: &Path, base: &str, yes: bool) -> Result<PathBuf, Error> {
         "list-panes",
         "-a",
         "-F",
-        "#{window_id}␟#{pane_current_path}␟#{@agent_watch_worktree}",
+        "#{window_id}␟#{pane_current_path}␟#{@drudwyn_worktree}",
     ]))?;
     let windows = panes
         .lines()

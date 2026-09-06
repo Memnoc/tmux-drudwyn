@@ -1,4 +1,4 @@
-# EU AI Act and GDPR applicability: `tmux-agent-watch`
+# EU AI Act and GDPR applicability: `tmux-drudwyn`
 
 Date: 2026-09-03
 Reviewed revision: `77cf87d9aa7944bb820459f3f3a813f094650823` (`ux/statusline-tabs`)
@@ -23,14 +23,14 @@ Rust executable that:
 
 Repository evidence includes `README.md`, `docs/privacy.md`, `src/discovery.rs`,
 `src/lifecycle.rs`, `src/workspace.rs`, and `tests/privacy_test.sh`. The optional
-legacy Bash path (`@agent-watch-v2 off`) is not evidence for the content-blind
+legacy Bash path (`@drudwyn-v2 off`) is not evidence for the content-blind
 v2 claim: its observation fallback includes `capture-pane` and some legacy
 hooks inspect event payload fields. Any continued distribution of that mode
 must be described separately rather than covered by the narrower v2 boundary.
 
 ## Executive finding
 
-On the stated v2 facts, `tmux-agent-watch` is likely **not an “AI system”**
+On the stated v2 facts, `tmux-drudwyn` is likely **not an “AI system”**
 under the EU AI Act. Article 3(1) requires a machine-based system that infers
 from inputs how to generate outputs such as predictions, content,
 recommendations, or decisions. This tool maps explicit operational facts to

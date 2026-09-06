@@ -8,9 +8,9 @@ If a popup says “v2 binary not found,” or newly pulled features are missing,
 build from the checkout that tmux actually loads:
 
 ```sh
-cd ~/.tmux/plugins/tmux-agent-watch
+cd ~/.tmux/plugins/tmux-drudwyn
 cargo build --release --locked
-./target/release/tmux-agent-watch --version
+./target/release/tmux-drudwyn --version
 tmux source-file ~/.tmux.conf
 ```
 
@@ -18,7 +18,7 @@ Substitute your manual checkout path if needed. Close and reopen the popup.
 The package version may stay the same across development commits; a successful
 rebuild is what includes the pulled changes.
 
-The launcher prefers an explicit `AGENT_WATCH_V2_BIN`, then the checkout's
+The launcher prefers an explicit `DRUDWYN_V2_BIN`, then the checkout's
 release build, then PATH. Check [binary selection](installation.md#which-binary-runs)
 if updating `~/.local/bin` or `~/.cargo/bin` has no visible effect.
 
@@ -53,12 +53,12 @@ tmux list-keys -T prefix C-s
 ```
 
 Another plugin or a later configuration line can replace a binding. Set a custom
-[Agent Watch shortcut](configuration.md) before loading the plugin, or resolve the
+[Drudwyn shortcut](configuration.md) before loading the plugin, or resolve the
 conflicting binding in your tmux configuration, then reload.
 
 `prefix + s` opens the session navigator. `prefix + S` opens tmux's native session
 tree. `prefix + Ctrl+s` is reserved for Resurrect's save binding when installed.
-Remove an old `@agent-watch-native-session-key C-s` override if it takes that key.
+Remove an old `@drudwyn-native-session-key C-s` override if it takes that key.
 
 ## Agent state is missing or delayed
 
@@ -92,12 +92,12 @@ does not automatically save. See [session persistence](usage.md#session-persiste
 Finish accepts a linked worktree that is clean and integrated into the configured
 base branch. It refuses the primary checkout, dirty worktrees, and unintegrated
 branches. Review the workspace's Git state and complete your normal commit and
-integration workflow, then retry. Confirm `@agent-watch-base-branch` matches your
+integration workflow, then retry. Confirm `@drudwyn-base-branch` matches your
 repository. See [worktree usage](usage.md#worktrees-from-the-command-line).
 
 ## Report a bug
 
-If these steps do not resolve it, [open an issue](https://github.com/Memnoc/tmux-agent-watch/issues)
+If these steps do not resolve it, [open an issue](https://github.com/Memnoc/tmux-drudwyn/issues)
 with your OS, tmux version, plugin commit, install method, relevant configuration,
 and minimal reproduction steps. Include expected and actual behavior. Share only
 configuration or screenshots needed to reproduce the problem; redact private

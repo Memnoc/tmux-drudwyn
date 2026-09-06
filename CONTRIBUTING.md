@@ -4,7 +4,7 @@
 
 ## Report a bug or suggest a change
 
-Use [GitHub issues](https://github.com/Memnoc/tmux-agent-watch/issues). For a bug,
+Use [GitHub issues](https://github.com/Memnoc/tmux-drudwyn/issues). For a bug,
 include your OS, `tmux -V`, the plugin commit (`git rev-parse --short HEAD`), install
 method, steps to reproduce, and expected versus actual behavior. Add relevant
 configuration or a screenshot when useful; remove private task and workspace details.
@@ -21,8 +21,8 @@ Some shell checks use GNU utility options; Linux is the straightforward environm
 for the full suite.
 
 ```sh
-git clone https://github.com/Memnoc/tmux-agent-watch.git
-cd tmux-agent-watch
+git clone https://github.com/Memnoc/tmux-drudwyn.git
+cd tmux-drudwyn
 cargo build --locked
 cargo test --locked
 ```
@@ -38,8 +38,9 @@ The first build downloads dependencies. Several shell tests build with Cargo's
 | `scripts/` | tmux wiring, agent hooks, worktree commands, and legacy implementation |
 | `integrations/` | Optional OpenCode event integration |
 | `tests/` | Shell integration checks and navigator keyboard tests |
-| `tmux-agent-watch.tmux` | Plugin entrypoint and key bindings |
+| `tmux-drudwyn.tmux` | Plugin entrypoint and key bindings |
 | `install.sh` | Release download and checksum verification |
+| `tooling/skills/` | Reusable repository-authoring skills |
 | `docs/` | User guides and project background |
 | `.github/workflows/` | Release builds, verification, and publication |
 
@@ -77,3 +78,7 @@ Release tags must match the Cargo package version. GitHub Actions builds and
 checksums Linux and macOS archives for x86_64 and ARM64. Before tagging, run the
 release workflow manually and complete the [preflight checklist](docs/preflight-checklist.md)
 against its `release-bundle`.
+
+## README presentation
+
+Follow the [README standard](docs/readme-style.md) for substantial presentation changes.

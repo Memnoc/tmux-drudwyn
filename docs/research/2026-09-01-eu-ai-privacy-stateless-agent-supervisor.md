@@ -5,7 +5,7 @@ Status: architecture research, not legal advice
 
 ## Question and assumptions
 
-This note considers `tmux-agent-watch` v2 as a local, open-source Rust CLI/tmux plugin which:
+This note considers `tmux-drudwyn` v2 as a local, open-source Rust CLI/tmux plugin which:
 
 - discovers and supervises user-operated Codex, Claude, and OpenCode processes;
 - performs no model inference, training, fine-tuning, evaluation, or content generation itself;

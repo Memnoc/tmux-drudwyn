@@ -12,17 +12,17 @@ output="${3:-$ROOT/dist}"
   exit 2
 }
 [ -x "$binary" ] || {
-  printf 'tmux-agent-watch: release binary is missing or not executable: %s\n' "$binary" >&2
+  printf 'tmux-drudwyn: release binary is missing or not executable: %s\n' "$binary" >&2
   exit 1
 }
 
-archive="tmux-agent-watch-${target}.tar.gz"
+archive="tmux-drudwyn-${target}.tar.gz"
 stage="$(mktemp -d)"
 trap 'rm -rf "$stage"' EXIT
-mkdir -p "$stage/tmux-agent-watch" "$output"
-install -m 0755 "$binary" "$stage/tmux-agent-watch/tmux-agent-watch"
-install -m 0644 "$ROOT/LICENSE" "$stage/tmux-agent-watch/LICENSE"
-install -m 0644 "$ROOT/README.md" "$stage/tmux-agent-watch/README.md"
-install -m 0644 "$ROOT/docs/privacy.md" "$stage/tmux-agent-watch/PRIVACY.md"
-tar -C "$stage" -czf "$output/$archive" tmux-agent-watch
+mkdir -p "$stage/tmux-drudwyn" "$output"
+install -m 0755 "$binary" "$stage/tmux-drudwyn/tmux-drudwyn"
+install -m 0644 "$ROOT/LICENSE" "$stage/tmux-drudwyn/LICENSE"
+install -m 0644 "$ROOT/README.md" "$stage/tmux-drudwyn/README.md"
+install -m 0644 "$ROOT/docs/privacy.md" "$stage/tmux-drudwyn/PRIVACY.md"
+tar -C "$stage" -czf "$output/$archive" tmux-drudwyn
 printf '%s\n' "$output/$archive"
