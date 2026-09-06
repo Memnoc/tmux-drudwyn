@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/brand/drudwyn-logo-v1.png" width="120" height="120" alt="Drudwyn: an attentive hound in a pastel-edged badge.">
+</p>
+
 <h1 align="center">Drudwyn</h1>
 
 <p align="center">

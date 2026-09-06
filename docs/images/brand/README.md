@@ -1,0 +1,12 @@
+# Drudwyn logo concept
+
+First logo concept: [drudwyn-logo-v1.png](drudwyn-logo-v1.png).
+
+Created with the built-in image generation tool. Visual direction informed by
+[Rosé Pine's public brand assets](https://github.com/rose-pine/rose-pine-theme/tree/main/assets):
+a soft badge, muted indigo center, and pastel accents. The hound represents
+Drudwyn. This is a raster concept, not a vector master.
+
+## Generation prompt
+
+Use case: logo-brand. Create one polished original logo mark for Drudwyn, a tmux plugin that helps people keep coding agents and workspaces within reach. Subject: a calm attentive Welsh mythological hound, shown as a very simple elegant seated sighthound silhouette in side profile, gently raised head and folded ear, long tapered muzzle, curved neck, compact body and tucked curved tail. It should read as a gentle dog, not a wolf, fox or cat. Style: soft minimalist open-source theme emblem. A dark muted indigo (#26233a) medallion with a softly rounded eight-lobed outline; a substantial smooth pastel rim transitioning subtly from dusty pink (#ebbcba) through lavender (#c4a7e7) to pale teal (#9ccfd8). Inside, use a single flat dusty-pink hound silhouette, with at most two restrained negative-space details. The dog is the sole central symbol. Strong simple shapes, generous breathing room, friendly alert presence, beautifully balanced geometry. Visual reference direction is the Rosé Pine theme's quiet pastel botanical badge, but create a distinct original hound composition with different contour and proportions. No flower, no leaves, no lettering, no initials, no stars, no moon, no shield, no ornament, no fur texture, no shadows, no 3D. One standalone centered icon, square canvas, genuinely transparent outside the medallion. Crisp edges suitable for a GitHub README logo at 120px and an avatar.
