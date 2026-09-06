@@ -46,6 +46,9 @@ pub struct App {
     error: Option<String>,
     task: Option<String>,
     start_agent: usize,
+    from_current: bool,
+    start_point: Option<workspace::StartPoint>,
+    start_error: Option<String>,
     finishing: bool,
     git_diffs: HashMap<PathBuf, GitDiff>,
     nerd_icons: bool,
@@ -73,6 +76,9 @@ impl App {
             filtering: false,
             error: None,
             task: None,
+            from_current: false,
+            start_point: None,
+            start_error: None,
             start_agent: agents()
                 .iter()
                 .position(|agent| *agent == config.default_agent)
@@ -87,7 +93,27 @@ impl App {
 
     fn begin_start(&mut self) {
         self.task = Some(String::new());
+        self.from_current = false;
+        self.resolve_start_point();
         self.error = None;
+    }
+
+    fn resolve_start_point(&mut self) {
+        let result = std::env::current_dir()
+            .map_err(workspace::Error::from)
+            .and_then(|repo| {
+                workspace::resolve_start_point(&repo, &self.config.base_branch, self.from_current)
+            });
+        match result {
+            Ok(point) => {
+                self.start_point = Some(point);
+                self.start_error = None;
+            }
+            Err(error) => {
+                self.start_point = None;
+                self.start_error = Some(error.to_string());
+            }
+        }
     }
 
     fn start_agent(&self) -> AgentKind {
@@ -168,9 +194,12 @@ impl App {
     }
 }
 
-pub fn run(variant: Variant) -> Result<(), CockpitError> {
+pub fn run(variant: Variant, start: bool) -> Result<(), CockpitError> {
     let config = Config::load_tmux().map_err(|error| io::Error::other(error.to_string()))?;
     let mut app = App::new(discovery::discover()?, variant, config);
+    if start {
+        app.begin_start();
+    }
     app.nerd_icons = Command::new("tmux")
         .args(["show-option", "-gqv", "@drudwyn-icon-mode"])
         .output()
@@ -211,14 +240,22 @@ fn event_loop(
                     task.pop();
                 }
                 KeyCode::Tab | KeyCode::Right => app.next_start_agent(),
+                KeyCode::F(2) => {
+                    app.from_current = !app.from_current;
+                    app.resolve_start_point();
+                }
                 KeyCode::Char(character) => task.push(character),
                 KeyCode::Enter if !task.trim().is_empty() => {
+                    let Some(point) = app.start_point.clone() else {
+                        continue;
+                    };
                     let task_text = std::mem::take(task);
                     let slug = slug(&task_text);
                     app.task = None;
                     match workspace::start(Start {
                         repo: std::env::current_dir()?,
                         branch: format!("{}{slug}", app.config.branch_prefix),
+                        start_point: point.commit,
                         root: None,
                         command: vec![app.start_agent().command().into()],
                     }) {
@@ -339,7 +376,7 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
     render_detail(frame, app, body[1]);
     render_footer(frame, app, layout[2]);
     if let Some(task) = &app.task {
-        let modal = centered(area, 70, 11);
+        let modal = centered(area, 70, 15);
         let label_width = usize::from(modal.width.saturating_sub(10));
         let branch = slug(task);
         let task_label = if app.config.redact_labels {
@@ -365,13 +402,35 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
             Line::from(""),
             Line::from(format!("Task   {task_label}")),
             Line::from(format!("Branch {branch_label}")),
+            Line::from(if app.from_current {
+                "Base   Continue from current branch (F2 change)"
+            } else {
+                "Base   Independent task (F2 change)"
+            }),
+            Line::from(ellipsize(
+                &if app.config.redact_labels {
+                    "       [redacted]".to_owned()
+                } else if let Some(point) = &app.start_point {
+                    format!("       {} ({})", point.reference, &point.commit[..12])
+                } else {
+                    app.start_error
+                        .clone()
+                        .unwrap_or_else(|| "Base unavailable".into())
+                },
+                label_width,
+            )),
+            Line::from("Local ref; remote freshness unknown"),
             Line::from(format!(
                 "Agent  {}  (Tab change)",
                 app.start_agent().label()
             )),
             Line::from(""),
             Line::styled(
-                "Enter create · Esc cancel",
+                if app.start_point.is_some() {
+                    "Enter create · Esc cancel"
+                } else {
+                    "Base unavailable · F2 change · Esc cancel"
+                },
                 Style::default().fg(app.theme.muted),
             ),
         ];
@@ -845,7 +904,7 @@ mod tests {
         let mut terminal = Terminal::new(backend).unwrap();
         terminal.draw(|frame| render(frame, &app)).unwrap();
 
-        let modal = centered(Rect::new(0, 0, 100, 24), 70, 11);
+        let modal = centered(Rect::new(0, 0, 100, 24), 70, 15);
         let buffer = terminal.backend().buffer();
         let content = (modal.y..modal.bottom())
             .flat_map(|y| {
@@ -866,7 +925,7 @@ mod tests {
         let mut terminal = Terminal::new(backend).unwrap();
         terminal.draw(|frame| render(frame, &app)).unwrap();
 
-        let modal = centered(Rect::new(0, 0, 100, 24), 70, 11);
+        let modal = centered(Rect::new(0, 0, 100, 24), 70, 15);
         let buffer = terminal.backend().buffer();
         for y in [modal.y + 3, modal.y + 4] {
             assert_eq!(buffer.cell((modal.right() - 2, y)).unwrap().symbol(), " ");
@@ -877,5 +936,41 @@ mod tests {
             })
             .collect::<String>();
         assert!(content.contains('…'));
+    }
+    #[test]
+    fn start_form_shows_base_commit_and_hides_it_when_redacted() {
+        let mut app = App::new(vec![], Variant::Moon, Config::default());
+        app.task = Some("Example task".into());
+        app.start_point = Some(workspace::StartPoint {
+            reference: "refs/remotes/origin/private-base".into(),
+            commit: "123456789abcdef0123456789abcdef0123456789a".into(),
+        });
+        for redacted in [false, true] {
+            app.config.redact_labels = redacted;
+            let mut terminal = Terminal::new(TestBackend::new(100, 24)).unwrap();
+            terminal.draw(|frame| render(frame, &app)).unwrap();
+            let content = terminal
+                .backend()
+                .buffer()
+                .content
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect::<String>();
+            assert!(content.contains("Independent task (F2 change)"));
+            assert!(content.contains("remote freshness unknown"));
+            assert_eq!(content.contains("private-base"), !redacted);
+            assert_eq!(content.contains("123456789abc"), !redacted);
+        }
+        app.from_current = true;
+        let mut terminal = Terminal::new(TestBackend::new(100, 24)).unwrap();
+        terminal.draw(|frame| render(frame, &app)).unwrap();
+        let content = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect::<String>();
+        assert!(content.contains("Continue from current branch"));
     }
 }

@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 import shlex
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -16,6 +17,7 @@ class NavigatorTest(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory(prefix="watch-nav-", dir="/tmp")
         self.addCleanup(self.directory.cleanup)
+        self.launch_count = 0
         self.socket = str(Path(self.directory.name) / "tmux.sock")
         self.addCleanup(lambda: self.tmux("kill-server", check=False))
         self.tmux("-f", "/dev/null", "new-session", "-d", "-s", "keep", "sleep 300")
@@ -28,12 +30,28 @@ class NavigatorTest(unittest.TestCase):
         ).stdout.strip()
 
     def start(self, surface):
+        self.launch(surface)
+        self.wait_text("NAVIGATOR")
+
+    def launch(self, surface):
+        # tmux 3.4 can report a dead pane without pane_dead_status after TUI
+        # shutdown. Record the child's real return code, including signals,
+        # rather than treating a missing tmux status as success or failure.
+        self.launch_count += 1
+        self.exit_status = Path(self.directory.name) / f"exit-{self.launch_count}"
+        runner = (
+            "import pathlib, subprocess, sys; "
+            "result = subprocess.run(sys.argv[2:]); "
+            "pathlib.Path(sys.argv[1]).write_text(str(result.returncode)); "
+            "sys.exit(result.returncode)"
+        )
         binary = Path(__file__).resolve().parents[1] / "target/debug/tmux-drudwyn"
         self.pane = self.tmux(
             "new-window", "-d", "-P", "-F", "#{pane_id}", "-t", "keep",
-            "-n", "navigator-test", shlex.join([str(binary), surface]),
+            "-n", "navigator-test", shlex.join([
+                sys.executable, "-c", runner, str(self.exit_status), str(binary), surface,
+            ]),
         )
-        self.wait_text("NAVIGATOR")
 
     def wait_text(self, text):
         deadline = time.monotonic() + 5
@@ -53,8 +71,12 @@ class NavigatorTest(unittest.TestCase):
         while time.monotonic() < deadline:
             status = self.tmux("display-message", "-p", "-t", self.pane,
                                "#{pane_dead}:#{pane_dead_status}")
-            if status == "1:0":
-                return
+            if self.exit_status.exists():
+                exit_code = self.exit_status.read_text().strip()
+                if exit_code:
+                    self.assertEqual(exit_code, "0", f"Navigator exited with code {exit_code}")
+                    if status.startswith("1:"):
+                        return
             time.sleep(0.02)
         self.fail(f"Navigator did not exit successfully: {status}")
 
@@ -73,6 +95,18 @@ class NavigatorTest(unittest.TestCase):
                 return
             time.sleep(0.02)
         self.fail(f"{target} still exists")
+
+    def test_exit_check_rejects_an_unsuccessful_process(self):
+        self.launch("--invalid-navigator-option")
+        with self.assertRaisesRegex(AssertionError, "Navigator exited with code 2"):
+            self.assert_closed()
+
+    def test_quit_exits_successfully_in_both_navigators(self):
+        for surface in ["navigator", "sessions"]:
+            with self.subTest(surface=surface):
+                self.start(surface)
+                self.keys("q")
+                self.assert_closed()
 
     def test_rename_selected_item_and_cancel_in_both_navigators(self):
         for surface, kind in [("navigator", "window"), ("sessions", "session")]:
