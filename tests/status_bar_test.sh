@@ -28,6 +28,9 @@ server_pid="$(tmux -L "$SOCKET" display-message -p '#{pid}')"
 export TMUX="$socket_path,$server_pid,0"
 
 tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode safe
+git init -q -b main "$TMP_DIR/example-project"
+git -C "$TMP_DIR/example-project" -c user.name=Test -c user.email=test@example.invalid commit -qm initial --allow-empty
+tmux -L "$SOCKET" set-option -wq -t "$codex_window" @drudwyn_context_repo "$TMP_DIR/example-project"
 safe="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
 printf '%s' "$safe" | grep -Fq '#[align=left]'
 printf '%s' "$safe" | grep -Fq '#[align=centre]'
@@ -70,7 +73,7 @@ printf 'ok: custom hound replaces bots while safe mode stays font-independent\n'
 
 narrow="$($ROOT/scripts/status-bar.sh bar "$codex_window" 72)"
 printf '%s' "$narrow" | grep -Fq '󰁔'
-printf '%s' "$narrow" | grep -Fq 'tmux-agent-wat'
+printf '%s' "$narrow" | grep -Fq 'example-proje'
 printf '%s' "$narrow" | grep -Fq 'WORK'
 if printf '%s' "$narrow" | grep -Fq 'northstar'; then
   printf 'not ok: narrow bar retained verbose inactive workspace labels\n'; exit 1

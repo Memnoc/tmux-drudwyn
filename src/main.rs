@@ -44,6 +44,9 @@ enum Command {
     },
     /// Open the interactive fleet cockpit.
     Cockpit {
+        /// Open directly in the new workspace form.
+        #[arg(long)]
+        start: bool,
         #[arg(long, value_enum, default_value_t = ThemeArg::Moon)]
         theme: ThemeArg,
     },
@@ -70,6 +73,12 @@ enum WorkspaceCommand {
         repo: PathBuf,
         #[arg(long)]
         worktree_root: Option<PathBuf>,
+        /// Base branch (defaults to @drudwyn-base-branch, then main).
+        #[arg(long, conflicts_with = "from_current")]
+        base: Option<String>,
+        /// Intentionally include the current checkout's commits.
+        #[arg(long)]
+        from_current: bool,
         branch: String,
         #[arg(trailing_var_arg = true)]
         command: Vec<String>,
@@ -195,16 +204,28 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
             );
             print!("{}\x1c{}", frame.text, frame.click_map);
         }
-        Command::Cockpit { theme } => cockpit::run(theme.into())?,
+        Command::Cockpit { theme, start } => cockpit::run(theme.into(), start)?,
         Command::Navigator { theme } => navigator::run(theme.into())?,
         Command::Sessions { theme } => session_navigator::run(theme.into())?,
         Command::Workspace { command } => match command {
             WorkspaceCommand::Start {
                 repo,
                 worktree_root,
+                base,
+                from_current,
                 branch,
                 command,
             } => {
+                let base = match base {
+                    Some(base) => base,
+                    None => Config::load_tmux()?.base_branch,
+                };
+                let point = workspace::resolve_start_point(&repo, &base, from_current)?;
+                eprintln!(
+                    "Starting from {} ({}) — local ref; remote freshness unknown",
+                    point.reference,
+                    &point.commit[..12]
+                );
                 let root = worktree_root
                     .or_else(|| std::env::var_os("DRUDWYN_WORKTREE_ROOT").map(PathBuf::from));
                 println!(
@@ -212,6 +233,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                     workspace::start(Start {
                         repo,
                         branch,
+                        start_point: point.commit,
                         root,
                         command
                     })?

@@ -142,3 +142,26 @@ any explicit `@drudwyn-native-session-key C-s` override that would reclaim it.
 Saving requires `tmux-resurrect` to be loaded. Drudwyn delegates to its
 `@resurrect-save-script-path` and creates no separate snapshot. Resurrect controls
 what is saved, including pane contents if you enabled its capture option.
+
+### Choosing a task base (Rust v2)
+
+New workspaces start from `@drudwyn-base-branch` (default `main`), even when
+launched inside another task's worktree. Drudwyn prefers that branch's locally
+available upstream ref, then `origin/<base>`, then the local base branch. If none
+exists, creation stops with an error instead of inheriting the current branch.
+
+Press `prefix + W` (or `n` in the cockpit) to open the start form, which shows
+the resolved ref and commit. Press **F2** to choose
+**Continue from current branch** when the new task intentionally depends on the
+current checkout. The displayed commit is the starting point used at creation.
+
+Refs are read locally; remote freshness is unknown. Run `git fetch <remote>`
+before opening the form when you need the latest remote commits.
+
+```sh
+scripts/worktree-new.sh --base main feature/independent codex
+scripts/worktree-new.sh --from-current feature/dependent codex
+```
+
+Without either flag, the CLI uses the configured base. These choices apply to
+the default Rust implementation; the legacy fallback retains its existing behavior.

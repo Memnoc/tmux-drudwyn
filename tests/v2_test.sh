@@ -24,6 +24,12 @@ binding="$(tmux -L "$SOCKET" list-keys -T prefix | awk '$4 == "P" && /scripts\/v
   exit 1
 }
 printf 'ok: v2 cockpit is the default on the existing cockpit key\n'
+binding="$(tmux -L "$SOCKET" list-keys -T prefix | awk '$4 == "W" && /cockpit --start/')"
+[ -n "$binding" ] || {
+  printf 'not ok: worktree key bypasses the base selection form\n'; exit 1;
+}
+printf 'ok: worktree key opens the base selection form\n'
+
 
 tmux -L "$SOCKET" set-option -g @drudwyn-v2 off
 tmux -L "$SOCKET" run-shell "$ROOT/tmux-drudwyn.tmux"
@@ -50,6 +56,12 @@ TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$fake_binary" "$ROOT/scripts/v
   exit 1
 }
 printf 'ok: v2 launcher forwards the Rose Pine theme variant\n'
+TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$fake_binary" "$ROOT/scripts/v2.sh" cockpit --start
+[ "$(cat "$apply_theme")" = 'cockpit --theme dawn --start' ] || {
+  printf 'not ok: v2 launcher dropped the start form flag\n'; exit 1;
+}
+printf 'ok: v2 launcher forwards the start form flag\n'
+
 
 before="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)"
 TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$fake_binary" "$ROOT/scripts/v2.sh" status
@@ -201,7 +213,10 @@ git -C "$repo" add PILOT.md
 git -C "$repo" commit -qm pilot
 no_change="$(TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" \
   DRUDWYN_WORKTREE_ROOT="$worktree_root" "$ROOT/scripts/worktree-new.sh" \
-  --repo "$repo" work/no-change "$TMP_DIR/codex" 30)"
+  --repo "$repo" --from-current work/no-change "$TMP_DIR/codex" 30)"
+[ "$(git -C "$no_change" rev-parse HEAD)" = "$(git -C "$repo" rev-parse ux/pilot)" ] || {
+  printf 'not ok: explicit dependent task lost current branch commits\n'; exit 1;
+}
 TMUX="$socket_path,$server_pid,0" "$real_binary" workspace finish \
   --path "$no_change" --base main --yes >/dev/null
 [ ! -e "$no_change" ] || {
@@ -224,6 +239,50 @@ created_window="$(tmux -L "$SOCKET" display-message -p -t v2:work-privacy '#{win
   exit 1
 }
 printf 'ok: v2 start creates an isolated workspace without content state\n'
+
+[ "$(git -C "$created" rev-parse HEAD)" = "$(git -C "$repo" rev-parse main)" ] &&
+  [ ! -e "$created/PILOT.md" ] || {
+  printf 'not ok: independent task inherited unrelated feature commits\n'; exit 1;
+}
+printf 'ok: independent task starts from main while source is on a feature branch\n'
+
+# A remote ref can be newer than local main; use it without contacting a server.
+git -C "$repo" update-ref refs/remotes/origin/main ux/pilot
+remote_created="$(TMUX="$socket_path,$server_pid,0" "$real_binary" workspace start \
+  --repo "$repo" --worktree-root "$worktree_root" work/remote-base "$TMP_DIR/codex" 30)"
+[ "$(git -C "$remote_created" rev-parse HEAD)" = "$(git -C "$repo" rev-parse origin/main)" ] || {
+  printf 'not ok: independent task ignored the locally available remote base\n'; exit 1;
+}
+git -C "$repo" update-ref -d refs/remotes/origin/main
+printf 'ok: independent task prefers the remote base over stale local main\n'
+
+# Configuration also governs CLI creation, with an explicit override available.
+git -C "$repo" branch trunk ux/pilot
+tmux -L "$SOCKET" set-option -g @drudwyn-base-branch trunk
+configured="$(TMUX="$socket_path,$server_pid,0" "$real_binary" workspace start \
+  --repo "$repo" --worktree-root "$worktree_root" work/configured-base "$TMP_DIR/codex" 30)"
+[ "$(git -C "$configured" rev-parse HEAD)" = "$(git -C "$repo" rev-parse trunk)" ] || {
+  printf 'not ok: CLI ignored configured base\n'; exit 1;
+}
+overridden="$(TMUX="$socket_path,$server_pid,0" "$real_binary" workspace start \
+  --repo "$repo" --base main --worktree-root "$worktree_root" work/override-base "$TMP_DIR/codex" 30)"
+[ "$(git -C "$overridden" rev-parse HEAD)" = "$(git -C "$repo" rev-parse main)" ] || {
+  printf 'not ok: explicit base did not override configuration\n'; exit 1;
+}
+tmux -L "$SOCKET" set-option -gu @drudwyn-base-branch
+printf 'ok: CLI respects configured and explicit base branches\n'
+
+if TMUX="$socket_path,$server_pid,0" "$real_binary" workspace start \
+  --repo "$repo" --base nonexistent --worktree-root "$worktree_root" \
+  work/missing-base "$TMP_DIR/codex" 30 >"$TMP_DIR/missing-base-error" 2>&1; then
+  printf 'not ok: missing base silently fell back to HEAD\n'; exit 1;
+fi
+[ ! -e "$worktree_root/work-missing-base" ] &&
+  ! git -C "$repo" show-ref --verify --quiet refs/heads/work/missing-base &&
+  grep -q 'starting branch nonexistent is unavailable' "$TMP_DIR/missing-base-error" || {
+  printf 'not ok: missing base leaked artifacts or omitted recovery advice\n'; exit 1;
+}
+printf 'ok: missing base fails before creating branch or worktree\n'
 
 if TMUX="$socket_path,$server_pid,0" "$real_binary" workspace finish \
   --path "$repo" --base main --yes >/dev/null 2>&1; then
@@ -250,7 +309,10 @@ linked_created="$(TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary
   printf 'not ok: start from a linked worktree nested its worktree root: %s\n' "$linked_created"
   exit 1
 }
-printf 'ok: start from a linked worktree uses the canonical repository root\n'
+[ "$(git -C "$linked_created" rev-parse HEAD)" = "$(git -C "$repo" rev-parse main)" ] || {
+  printf 'not ok: linked-worktree task did not start from the base\n'; exit 1;
+}
+printf 'ok: start from a linked worktree uses the canonical repository root and base\n'
 
 privacy_task='rotate private customer token 9f47c2'
 receiver="$TMP_DIR/task-receiver"

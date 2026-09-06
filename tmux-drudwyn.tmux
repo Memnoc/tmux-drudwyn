@@ -68,16 +68,18 @@ fi
 tmux bind-key "$(option @drudwyn-next-key a)" run-shell "$PLUGIN_DIR/scripts/next-attention.sh"
 tmux bind-key "$(option @drudwyn-sidebar-key Space)" run-shell "$PLUGIN_DIR/scripts/sidebar-resize.sh"
 tmux bind-key "$(option @drudwyn-restart-key A)" run-shell "$PLUGIN_DIR/scripts/sidebar-restart.sh"
-tmux bind-key "$(option @drudwyn-worktree-key W)" command-prompt -p 'Branch:' \
-  "run-shell '$PLUGIN_DIR/scripts/worktree-new.sh --repo \"#{pane_current_path}\" \"%%\"'"
 tmux bind-key "$(option @drudwyn-finish-key X)" display-popup -EE -w 70% -h 30% \
   -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/worktree-finish.sh"
 tmux bind-key "$(option @drudwyn-help-key H)" display-popup -E -w 72 -h 24 \
   "$PLUGIN_DIR/scripts/help.sh"
 if [ "$(option @drudwyn-v2 on)" = on ]; then
+  tmux bind-key "$(option @drudwyn-worktree-key W)" display-popup -EE -w 96 -h 20 \
+    -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/v2.sh cockpit --start"
   tmux bind-key "$(option @drudwyn-cockpit-key P)" display-popup -EE -w 96 -h 28 \
     -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/v2.sh cockpit"
 else
+  tmux bind-key "$(option @drudwyn-worktree-key W)" command-prompt -p 'Branch:' \
+    "run-shell '$PLUGIN_DIR/scripts/worktree-new.sh --repo \"#{pane_current_path}\" \"%%\"'"
   tmux bind-key "$(option @drudwyn-cockpit-key P)" display-popup -EE -w 78 -h 26 \
     -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/cockpit.sh"
 fi
