@@ -1,5 +1,8 @@
 # Drudwyn static icon
 
+The Drudwyn logo and white silhouette icon are **AI-generated artwork**, created
+with OpenAI's image generation tools and refined through human-directed prompts.
+
 `drudwyn-white.png` is a white seated-hound silhouette with an actual transparent
 alpha channel, generated from `docs/images/brand/drudwyn-logo-v3.png` using
 OpenAI's built-in image generation tool on 2026-09-06.
