@@ -51,6 +51,21 @@ if printf '%s' "$nerd" | grep -Eq '|'; then
 fi
 printf 'ok: Nerd mode renders the selected-agent and overflow vocabulary\n'
 
+tmux -L "$SOCKET" set-option -g @drudwyn-agent-icon '󰀀'
+hound="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
+printf '%s' "$hound" | grep -Fq '󰀀'
+if printf '%s' "$hound" | grep -Fq '󰚩'; then
+  printf 'not ok: custom agent icon left bot icons in the bar\n'; exit 1
+fi
+tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode safe
+safe_custom="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
+if printf '%s' "$safe_custom" | grep -Fq '󰀀'; then
+  printf 'not ok: safe mode emitted the custom font glyph\n'; exit 1
+fi
+tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode nerd
+tmux -L "$SOCKET" set-option -gu @drudwyn-agent-icon
+printf 'ok: custom hound replaces bots while safe mode stays font-independent\n'
+
 narrow="$($ROOT/scripts/status-bar.sh bar "$codex_window" 72)"
 printf '%s' "$narrow" | grep -Fq '󰁔'
 printf '%s' "$narrow" | grep -Fq 'tmux-agent-wat'

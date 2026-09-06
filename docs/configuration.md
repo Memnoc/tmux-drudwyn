@@ -56,6 +56,11 @@ and `@drudwyn-{working,needs-input,done,failed}-symbol`.
 
 ## Upgrading existing options
 
+To replace the status bar's bot with the optional hound font glyph, see
+[the font installation and preview instructions](../assets/brand/README.md#optional-status-bar-glyph).
+`@drudwyn-agent-icon` overrides the agent icon in Nerd Font mode only; unset it
+to restore the default bot. Other Nerd Font symbols are unaffected.
+
 The plugin imports old `@agent-watch-*` settings into `@drudwyn-*` when loaded,
 including Nerd Font mode and custom symbols. Explicit new settings take precedence.
 See [the upgrade guide](upgrading-to-drudwyn.md).
