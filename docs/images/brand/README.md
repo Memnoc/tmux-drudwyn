@@ -1,8 +1,14 @@
 # Drudwyn logo concept
 
-Current logo concept: [drudwyn-logo-v2.png](drudwyn-logo-v2.png).
+Current logo concept: [drudwyn-logo-v3.png](drudwyn-logo-v3.png).
 
-Version 2 removes the shadow behind the hound and simplifies the haunch detail.
+Version 3 restores actual exterior alpha transparency. The saved PNG was decoded
+to verify fully transparent corners and surrounding pixels. Generated with the
+built-in image tool from version 2 using this prompt:
+
+> Remove the dark background outside the pastel badge. Return the unchanged badge and dog as a transparent PNG cutout with a real alpha channel. Keep the dark indigo inside the badge opaque. Preserve the existing artwork; only remove the exterior background.
+
+Version 2 removed the shadow behind the hound and simplified the haunch detail.
 It has an opaque dark background for the README preview: the image tool did not
 preserve alpha transparency during cleanup. The original transparent concept is
 retained as [drudwyn-logo-v1.png](drudwyn-logo-v1.png).
