@@ -11,7 +11,6 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-c4a7e7" alt="License: MIT"></a>
-  <a href="Cargo.toml"><img src="https://img.shields.io/badge/built_with-Rust-ebbcba" alt="Built with Rust"></a>
   <a href="#install"><img src="https://img.shields.io/badge/platforms-Linux_%C2%B7_macOS-9ccfd8" alt="Platforms: Linux and macOS"></a>
 </p>
 
