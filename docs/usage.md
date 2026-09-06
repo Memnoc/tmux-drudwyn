@@ -1,0 +1,144 @@
+# Daily use
+
+[Documentation](README.md) · [Project home](../README.md)
+
+In this guide, `prefix` means your tmux prefix key (normally `Ctrl+b`). Press it, release it, then press the next key. Uppercase letters use Shift; `C-s` means `Ctrl+s`.
+
+## Find your workspace
+
+See what is running, what needs attention, and where to act without leaving tmux.
+
+| Surface             | What it answers                               | Open it        |
+| ------------------- | --------------------------------------------- | -------------- |
+| Status bar          | Where am I, what changed, and who needs me?   | Always visible |
+| Workspace Navigator | What is running across all tmux sessions?     | `prefix + w`   |
+| Workspace Cockpit   | What should I review, open, start, or finish? | `prefix + P`   |
+
+### Status at a glance
+
+<img src="images/design/status-bar-anatomy.png" alt="Annotated tmux status bar split into three zones: ordinary workspaces on the left, content-blind Git context in the centre, and lifecycle-colored agents on the right, with a variant showing the active-workspace highlight">
+
+| Color | State   | Meaning                  |
+| ----- | ------- | ------------------------ |
+| Blue  | Working | The agent is active      |
+| Gold  | Waiting | The agent needs input    |
+| Green | Review  | Work is ready to inspect |
+| Red   | Failed  | The agent or task failed |
+
+Only lifecycle state, branch, and Git counts are shown. The default Rust
+implementation never reads prompts, responses, or terminal scrollback.
+
+### Find work, then act
+
+Use the session navigator to find a session, the workspace navigator to find a window, and the cockpit to act on a workspace.
+
+<img src="images/navigator-cockpit-surfaces.png" alt="Comparison of three complementary tmux-agent-watch surfaces: the Session Navigator for switching tmux sessions, the Workspace Navigator for finding windows and agents across sessions, and the Workspace Cockpit for starting, reviewing, opening, and finishing agent work">
+
+| Surface             | What you can do                                      | Use it when                                    |
+| ------------------- | ---------------------------------------------------- | ---------------------------------------------- |
+| Session Navigator   | Find and switch tmux sessions                        | You know which session you want                |
+| Workspace Navigator | Find any window or active agent across every session | You need to locate a workspace or agent        |
+| Workspace Cockpit   | Start, review, open, and finish agent work           | You need context or want to act on a workspace |
+
+| Cockpit action | Result                                                         | Direct key   |
+| -------------- | -------------------------------------------------------------- | ------------ |
+| Start          | Create a linked worktree, choose an agent, and begin the task  | `prefix + W` |
+| Review         | Show agents waiting, failed, or ready for review               | —            |
+| Jump           | Open a live agent workspace                                    | `prefix + w` |
+| Finish         | Remove a clean, integrated worktree while retaining its branch | `prefix + X` |
+
+<img src="images/design/lifecycle-flow.png" alt="Lifecycle flow diagram: start task creates a worktree, the agent moves to working, then needs attention when waiting or failed, then review when idle and ready, then finish safely once clean and merged">
+
+Finish refuses primary checkouts, dirty worktrees, and branches not integrated
+into the configured base branch.
+
+### Responsive layout
+
+The status bar adapts to narrower terminals and tiled windows.
+
+<img src="images/design/responsive-layouts.png" alt="The status bar at three widths: wide showing every workspace and agent, narrow collapsing inactive workspace labels to an arrow, and compact under 80 columns sharing project, Git, lifecycle, and navigator cues in one flow">
+
+Workspace, Git, lifecycle, and navigation context remain visible as the
+terminal narrows; labels collapse before information collides.
+
+## Keyboard reference
+
+| Key              | Action                                         |
+| ---------------- | ---------------------------------------------- |
+| `prefix + H`     | Open help (`q` or Escape closes it)            |
+| `prefix + P`     | Open the Workspace Cockpit                     |
+| `prefix + w`     | Open the grouped workspace navigator           |
+| `prefix + C-w`   | Open tmux's native window tree                 |
+| `prefix + s`     | Open the compact session navigator             |
+| `prefix + S`     | Open tmux's native session tree                |
+| `prefix + C-s`   | Save all sessions (tmux-resurrect)              |
+| `prefix + a`     | Jump to the oldest agent needing attention     |
+| `prefix + W`     | Create a worktree and start an agent           |
+| `prefix + X`     | Finish the selected clean, integrated worktree |
+| `prefix + Space` | Toggle the optional legacy sidebar             |
+| `prefix + A`     | Recreate a stuck legacy sidebar                |
+
+Inside either navigator, these shortcuts act on the selected item:
+
+| Key | Action |
+| --- | --- |
+| `j` / `k` or arrow keys | Move selection |
+| `Enter` | Switch to the selected session or window |
+| `/` | Filter the list |
+| `r` | Rename the selected session (`prefix + s`) or window (`prefix + w`) |
+| `x` | Kill the selected item after confirmation |
+| `s` | Save all sessions with tmux-resurrect |
+| `Esc` / `q` | Close the navigator |
+
+Renaming starts with the current name. Use `Backspace` to delete, `Enter` to
+apply, and `Esc` to cancel. The navigator stays open and reports any error so
+you can correct the name. Press `s` afterward to save the updated layout with
+Resurrect.
+
+Inside either navigator, select an item and press `x`, then `y` to confirm killing
+it (`Esc` or `n` cancels). In `prefix + w`, this kills the selected tmux window
+and all its panes, including any links to that window in other sessions. In
+`prefix + s`, it kills the selected session; windows linked to another session
+survive. Running processes in closed panes stop. Git worktrees and files remain
+on disk. The list refreshes after a kill; killing the session hosting the popup
+may close it and detach its clients.
+
+Existing tmux window navigation, naming, and pane zoom continue to work.
+
+## Worktrees from the command line
+
+Use the cockpit for everyday work. For automation, run these scripts from the
+plugin checkout directory:
+
+```sh
+scripts/worktree-new.sh feature/auth opencode
+scripts/worktree-new.sh --repo /path/to/repository feature/auth opencode
+scripts/worktree-remove.sh feature/auth
+```
+
+Extra arguments after the branch are used as the exact agent command. Set
+`AGENT_WATCH_WORKTREE_ROOT` to change the worktree parent directory. Removal
+refuses dirty worktrees and retains the branch.
+
+## Session persistence
+
+Live state is stored in tmux window options. Use `tmux-resurrect` and
+`tmux-continuum` to restore sessions, windows, layouts, and working directories.
+Load Continuum after themes that replace `status-right`.
+
+Press `s` inside either navigator to save **all sessions** through the installed
+Resurrect plugin without closing the navigator. The footer reports the result.
+After cleaning up windows or sessions, save before exiting tmux so the next
+restore uses the updated layout. Kills do not automatically save; if killing the
+session hosting the popup closes it, reopen a navigator in a remaining session
+and save there.
+
+Resurrect's default global save shortcut is `prefix + Ctrl+s`. Agent Watch leaves
+that key available and puts the native session tree on `prefix + Shift+s`.
+If upgrading from a version that used `Ctrl+s` for the native tree, reload your
+tmux configuration with Resurrect enabled to restore its save binding. Remove
+any explicit `@agent-watch-native-session-key C-s` override that would reclaim it.
+
+Saving requires `tmux-resurrect` to be loaded. Agent Watch delegates to its
+`@resurrect-save-script-path` and creates no separate snapshot. Resurrect controls
+what is saved, including pane contents if you enabled its capture option.
