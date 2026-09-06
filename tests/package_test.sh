@@ -9,11 +9,12 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 cargo build --offline --manifest-path "$ROOT/Cargo.toml" >/dev/null
 archive="$($ROOT/scripts/package-release.sh x86_64-unknown-linux-gnu \
   "$ROOT/target/debug/tmux-drudwyn" "$TMP_DIR/release")"
-tar -tzf "$archive" | grep -Fxq 'tmux-drudwyn/tmux-drudwyn' || {
+tar -tzf "$archive" > "$TMP_DIR/archive.list"
+grep -Fxq 'tmux-drudwyn/tmux-drudwyn' "$TMP_DIR/archive.list" || {
   printf 'not ok: release archive does not contain the binary\n'
   exit 1
 }
-tar -tzf "$archive" | grep -Fxq 'tmux-drudwyn/PRIVACY.md' || {
+grep -Fxq 'tmux-drudwyn/PRIVACY.md' "$TMP_DIR/archive.list" || {
   printf 'not ok: release archive does not contain the privacy manifest\n'
   exit 1
 }
