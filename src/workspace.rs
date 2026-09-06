@@ -24,6 +24,7 @@ pub enum Error {
 pub struct Start {
     pub repo: PathBuf,
     pub branch: String,
+    pub start_point: String,
     pub root: Option<PathBuf>,
     pub command: Vec<String>,
 }
@@ -31,6 +32,59 @@ pub struct Start {
 pub struct Started {
     pub path: PathBuf,
     pub window_id: String,
+}
+
+/// Resolve a starting point using local refs only. Never inherit HEAD implicitly.
+#[derive(Clone, Debug)]
+pub struct StartPoint {
+    pub reference: String,
+    pub commit: String,
+}
+
+pub fn resolve_start_point(
+    repo: &Path,
+    base: &str,
+    from_current: bool,
+) -> Result<StartPoint, Error> {
+    if !from_current {
+        git(repo, &["check-ref-format", &format!("refs/heads/{base}")])?;
+    }
+    let candidates = if from_current {
+        vec![git(repo, &["symbolic-ref", "--quiet", "HEAD"]).unwrap_or_else(|_| "HEAD".into())]
+    } else {
+        // Respect the configured branch's upstream, including non-origin remotes.
+        let upstream = git(
+            repo,
+            &[
+                "for-each-ref",
+                "--format=%(upstream)",
+                &format!("refs/heads/{base}"),
+            ],
+        )?;
+        let mut refs = Vec::new();
+        if !upstream.is_empty() {
+            refs.push(upstream);
+        }
+        refs.push(format!("refs/remotes/origin/{base}"));
+        refs.push(format!("refs/heads/{base}"));
+        refs
+    };
+    for reference in candidates {
+        if let Ok(commit) = git(
+            repo,
+            &[
+                "rev-parse",
+                "--verify",
+                "--end-of-options",
+                &format!("{reference}^{{commit}}"),
+            ],
+        ) {
+            return Ok(StartPoint { reference, commit });
+        }
+    }
+    Err(Error::Invalid(format!(
+        "starting branch {base} is unavailable; fetch it, configure @drudwyn-base-branch, or choose to continue from the current branch"
+    )))
 }
 
 pub fn start(request: Start) -> Result<Started, Error> {
@@ -84,13 +138,23 @@ pub fn start(request: Start) -> Result<Started, Error> {
             target.display()
         )));
     }
+    let commit = git(
+        &source,
+        &[
+            "rev-parse",
+            "--verify",
+            "--end-of-options",
+            &format!("{}^{{commit}}", request.start_point),
+        ],
+    )?;
     fs::create_dir_all(&root)?;
     git_ok(
         Command::new("git")
             .arg("-C")
             .arg(&source)
             .args(["worktree", "add", "-q", "-b", &request.branch])
-            .arg(&target),
+            .arg(&target)
+            .arg(&commit),
     )?;
     let command = if request.command.is_empty() {
         vec!["codex".into()]

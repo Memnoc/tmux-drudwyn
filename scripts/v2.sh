@@ -21,7 +21,8 @@ case "${1:-}" in
   cockpit)
     theme="$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)"
     theme="${theme:-moon}"
-    exec "$binary" cockpit --theme "$theme"
+    shift
+    exec "$binary" cockpit --theme "$theme" "$@"
     ;;
   navigator)
     theme="$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)"

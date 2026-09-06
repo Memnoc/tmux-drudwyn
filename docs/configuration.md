@@ -9,7 +9,7 @@ Defaults work without configuration. You can set overrides before loading the pl
 | Option                       | Default | Purpose                                    |
 | ---------------------------- | ------- | ------------------------------------------ |
 | `@drudwyn-agent`         | `codex` | Agent started for new worktrees            |
-| `@drudwyn-base-branch`   | `main`  | Branch used to validate finished work      |
+| `@drudwyn-base-branch`   | `main`  | Base for new tasks and finished-work validation      |
 | `@drudwyn-branch-prefix` | `work/` | Prefix for generated branches              |
 | `@drudwyn-theme`         | `moon`  | `rose-pine`, `moon`, or `dawn`             |
 | `@drudwyn-icon-mode`     | `safe`  | Use `nerd` for Nerd Font icons             |
