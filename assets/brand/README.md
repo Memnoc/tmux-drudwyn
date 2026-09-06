@@ -12,9 +12,15 @@ cutouts; inspect at the intended display size before using it in a polished UI.
 The existing full-colour README logo remains the primary mark.
 
 The PNG and this note are included under `assets/brand/` in release archives.
-The asset is available to image-capable interfaces; it is not a font glyph and
-does not change the tmux status bar or any font settings. The binary-only
-installer does not install these companion files.
+The cockpit embeds the PNG in the binary and renders a small white silhouette
+beside its title using Unicode half-block characters. This works without a
+custom font or terminal image protocol. Windows smaller than 70 columns or 24
+rows use the compact text header. The icon sits on a dark tile so it remains
+visible with the light Dawn theme too.
+
+Open it with `prefix + P`. The status bar and font settings are unchanged. The
+binary-only installer includes the embedded icon but does not install the
+standalone companion files.
 
 Generation provenance is recorded here, not a guarantee of originality,
 exclusive copyright, or trademark clearance. The repository licence applies
