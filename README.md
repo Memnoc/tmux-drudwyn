@@ -153,3 +153,5 @@ decisions about people are outside its intended purpose. [Privacy details](docs/
 ## License
 
 Released under the [MIT License](LICENSE).
+
+The logo is AI-generated. [Artwork provenance](assets/brand/README.md).
