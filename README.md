@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Keep every agent within reach.</strong><br>
-  A tmux plugin for navigating coding agents, tracking workspaces, and finishing work safely.
+  A tmux plugin for navigating coding agents, tracking work trees and workspaces.
 </p>
 
 <p align="center">
