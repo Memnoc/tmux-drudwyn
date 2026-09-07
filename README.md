@@ -1,6 +1,5 @@
 <p align="center">
   <img src="docs/images/brand/drudwyn-logo-v3.png" width="120" alt="Drudwyn: an attentive hound in a pastel-edged badge.">
-  <br><sub>AI-generated logo · <a href="assets/brand/README.md">Artwork provenance</a></sub>
 </p>
 
 <h1 align="center">Drudwyn</h1>
@@ -153,3 +152,5 @@ decisions about people are outside its intended purpose. [Privacy details](docs/
 ## License
 
 Released under the [MIT License](LICENSE).
+
+The logo is AI-generated. [Artwork provenance](assets/brand/README.md).
