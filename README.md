@@ -37,7 +37,14 @@
 
 ## Install
 
-You need tmux with popup support, Git, Bash, and a supported agent installed.
+You need:
+
+- tmux with popup support
+- Git
+- Bash
+- a supported agent installed
+- Cargo (so Rust must be installed)
+
 This checkout uses the v2 Rust implementation; building it requires Rust and Cargo.
 `prefix` means your tmux prefix key—normally `Ctrl+b`, followed by the indicated key.
 
@@ -88,15 +95,15 @@ scrollback. It uses lifecycle and Git metadata. [Privacy and data flow](docs/pri
 
 ## Use
 
-| Key | Action |
-| --- | --- |
-| `prefix + P` | Open the Workspace Cockpit |
-| `prefix + w` | Find a workspace across sessions |
-| `prefix + s` | Find a session |
-| `prefix + a` | Jump to an agent needing attention |
+| Key          | Action                               |
+| ------------ | ------------------------------------ |
+| `prefix + P` | Open the Workspace Cockpit           |
+| `prefix + w` | Find a workspace across sessions     |
+| `prefix + s` | Find a session                       |
+| `prefix + a` | Jump to an agent needing attention   |
 | `prefix + W` | Create a worktree and start an agent |
-| `prefix + X` | Finish a clean, integrated worktree |
-| `prefix + H` | Open help |
+| `prefix + X` | Finish a clean, integrated worktree  |
+| `prefix + H` | Open help                            |
 
 Inside either navigator: `/` filters, `Enter` switches, `r` renames, `x` asks to
 kill the selection, and `s` saves all sessions through tmux-resurrect.
