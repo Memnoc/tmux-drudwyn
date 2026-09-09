@@ -109,6 +109,7 @@ scrollback. It uses lifecycle and Git metadata. [Privacy and data flow](docs/pri
 | `prefix + a` | Jump to an agent needing attention |
 | `prefix + W` | Create a worktree and start an agent |
 | `prefix + X` | Finish a clean, integrated worktree |
+| `prefix + O` | Customise Drudwyn options |
 | `prefix + H` | Open help |
 
 Inside either navigator: `/` filters, `Enter` switches, `r` renames, `x` asks to
@@ -124,8 +125,10 @@ hooks provide exact state transitions. [Set up your agent](docs/agents.md).
 
 ## Configure
 
-Choose an agent, theme, base branch, or custom shortcut in `~/.tmux.conf`.
-Defaults work without extra configuration. [Configuration reference](docs/configuration.md).
+Press `prefix + O` to choose an agent, theme, behaviour, lifecycle style, or
+shortcut. Changes apply immediately to the current tmux server; copy the values
+you want to keep into `~/.tmux.conf`. Defaults work without extra configuration.
+[Configuration reference](docs/configuration.md).
 
 Prefer the bot? Add `set -g @drudwyn-agent-icon bot` to `~/.tmux.conf`.
 

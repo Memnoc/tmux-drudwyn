@@ -8,7 +8,15 @@ case "$width" in
 esac
 
 color="$(tmux show-option -gqv @drudwyn-separator-color 2>/dev/null || true)"
-color="${color:-#393552}"
+case "$color" in
+  ''|default)
+    case "$(tmux show-option -gqv @drudwyn-theme 2>/dev/null || true)" in
+      dawn) color='#dfdad9' ;;
+      rose-pine) color='#403d52' ;;
+      *) color='#393552' ;;
+    esac
+    ;;
+esac
 
 printf '#[fg=%s]' "$color"
 awk -v width="$width" 'BEGIN { for (column = 0; column < width; column++) printf "─" }'

@@ -56,6 +56,12 @@ TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$fake_binary" "$ROOT/scripts/v
   exit 1
 }
 printf 'ok: v2 launcher forwards the Rose Pine theme variant\n'
+TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$fake_binary" "$ROOT/scripts/v2.sh" settings
+[ "$(cat "$apply_theme")" = 'settings --theme dawn' ] || {
+  printf 'not ok: settings launcher did not forward the selected theme\n'
+  exit 1
+}
+printf 'ok: settings launcher forwards the Rose Pine theme variant\n'
 TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$fake_binary" "$ROOT/scripts/v2.sh" cockpit --start
 [ "$(cat "$apply_theme")" = 'cockpit --theme dawn --start' ] || {
   printf 'not ok: v2 launcher dropped the start form flag\n'; exit 1;
@@ -89,7 +95,8 @@ tmux -L "$SOCKET" set-option -wq -t "$agent_window" @drudwyn_message 'sensitive 
 TMUX="$socket_path,$server_pid,0" DRUDWYN_V2_BIN="$real_binary" "$ROOT/scripts/v2.sh" scan
 state="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_state)"
 message="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_message)"
-[ "$state" = working ] && [ -z "$message" ] || {
+agent="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_agent)"
+[ "$state" = working ] && [ -z "$message" ] && [ "$agent" = codex ] || {
   printf 'not ok: v2 scan did not classify the process and erase legacy content\n'
   exit 1
 }
@@ -100,7 +107,8 @@ printf '%s' '{"prompt":"private customer material"}' |
   "$ROOT/scripts/codex-hook.sh" permissionRequest
 state="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_state)"
 message="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_message)"
-[ -z "$message" ] || {
+agent="$(tmux -L "$SOCKET" show-option -wqv -t "$agent_window" @drudwyn_agent)"
+[ -z "$message" ] && [ "$agent" = codex ] || {
   printf 'not ok: v2 hook retained payload content or mapped the event incorrectly\n'
   exit 1
 }

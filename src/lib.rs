@@ -9,5 +9,7 @@ pub mod lifecycle;
 pub mod navigator;
 mod persistence;
 pub mod session_navigator;
+pub mod settings;
 pub mod theme;
+mod ui;
 pub mod workspace;

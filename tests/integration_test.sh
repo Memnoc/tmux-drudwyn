@@ -45,6 +45,10 @@ binding="$(tmux -L "$SOCKET" list-keys -T prefix | grep 'scripts/next-attention.
 [ -n "$binding" ] || { printf 'not ok: attention binding missing\n'; exit 1; }
 printf 'ok: attention binding installed\n'
 
+options_binding="$(tmux -L "$SOCKET" list-keys -T prefix | awk '$4 == "O" && /scripts\/settings.sh/')"
+[ -n "$options_binding" ] || { printf 'not ok: options binding missing\n'; exit 1; }
+printf 'ok: options editor binding installed\n'
+
 sidebar_binding="$(tmux -L "$SOCKET" list-keys -T prefix | grep 'Space.*scripts/sidebar-resize.sh' || true)"
 [ -n "$sidebar_binding" ] || { printf 'not ok: sidebar binding missing\n'; exit 1; }
 printf 'ok: sidebar binding installed\n'
@@ -81,7 +85,10 @@ hook_count="$(tmux -L "$SOCKET" show-hooks -g after-new-window | grep -c "$ROOT/
 printf 'ok: plugin reload keeps hooks unique\n'
 
 state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_state)"
-[ "$state" = working ] || { printf 'not ok: expected working, got %s\n' "$state"; exit 1; }
+agent="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_agent)"
+[ "$state" = working ] && [ "$agent" = codex ] || {
+  printf 'not ok: expected working Codex, got %s/%s\n' "$state" "$agent"; exit 1;
+}
 printf 'ok: observer classified agent\n'
 
 first_pane="$(tmux -L "$SOCKET" list-panes -t agents:0 -F '#{pane_id}|#{@drudwyn_sidebar}' |
@@ -90,7 +97,9 @@ printf '{"prompt":"implement exact lifecycle states"}' |
   TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/claude-hook.sh" UserPromptSubmit
 hook_message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_message)"
 hook_source="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_source)"
-[ "$hook_message" = 'implement exact lifecycle states' ] && [ "$hook_source" = hook ] || {
+agent="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_agent)"
+[ "$hook_message" = 'implement exact lifecycle states' ] && [ "$hook_source" = hook ] &&
+  [ "$agent" = claude ] || {
   printf 'not ok: lifecycle hook did not publish an exact state\n'; exit 1;
 }
 printf '{}' | TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/claude-hook.sh" Stop
@@ -107,7 +116,10 @@ hook_message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_message)
 }
 printf '{}' | TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/codex-hook.sh" permissionRequest
 state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_state)"
-[ "$state" = needs_input ] || { printf 'not ok: Codex permission hook produced %s\n' "$state"; exit 1; }
+agent="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_agent)"
+[ "$state" = needs_input ] && [ "$agent" = codex ] || {
+  printf 'not ok: Codex permission hook produced %s/%s\n' "$state" "$agent"; exit 1;
+}
 printf 'ok: Codex lifecycle events publish exact states\n'
 
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/opencode-hook.sh" working
@@ -118,7 +130,10 @@ message="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_message)"
 }
 TMUX="$socket_path,$server_pid,0" TMUX_PANE="$first_pane" "$ROOT/scripts/opencode-hook.sh" idle
 state="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_state)"
-[ "$state" = done ] || { printf 'not ok: OpenCode idle hook produced %s\n' "$state"; exit 1; }
+agent="$(tmux -L "$SOCKET" show-option -wqv -t agents:0 @drudwyn_agent)"
+[ "$state" = done ] && [ "$agent" = opencode ] || {
+  printf 'not ok: OpenCode idle hook produced %s/%s\n' "$state" "$agent"; exit 1;
+}
 printf 'ok: OpenCode lifecycle events publish exact states\n'
 
 fleet_output="$(TMUX="$socket_path,$server_pid,0" "$ROOT/scripts/hud.sh" fleet agents @0)"

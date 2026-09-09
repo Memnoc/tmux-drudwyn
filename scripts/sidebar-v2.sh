@@ -4,6 +4,7 @@ set -u
 PLUGIN_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
 session="$1"
 previous=''
+trap 'previous=""' USR1
 
 while tmux has-session -t "$session" 2>/dev/null; do
   current="$(tmux display-message -p -t "$session:" '#{window_id}')"

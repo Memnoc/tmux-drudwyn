@@ -18,10 +18,16 @@ for name in northstar dots starscript extra; do
 done
 tmux -L "$SOCKET" new-window -d -t bar -n codex
 tmux -L "$SOCKET" new-window -d -t bar -n claude
+tmux -L "$SOCKET" new-window -d -t bar -n opencode
 codex_window="$(tmux -L "$SOCKET" display-message -p -t bar:codex '#{window_id}')"
 claude_window="$(tmux -L "$SOCKET" display-message -p -t bar:claude '#{window_id}')"
+opencode_window="$(tmux -L "$SOCKET" display-message -p -t bar:opencode '#{window_id}')"
 tmux -L "$SOCKET" set-option -wq -t "$codex_window" @drudwyn_state working
 tmux -L "$SOCKET" set-option -wq -t "$claude_window" @drudwyn_state needs_input
+tmux -L "$SOCKET" set-option -wq -t "$opencode_window" @drudwyn_state done
+tmux -L "$SOCKET" set-option -wq -t "$codex_window" @drudwyn_agent codex
+tmux -L "$SOCKET" set-option -wq -t "$claude_window" @drudwyn_agent claude
+tmux -L "$SOCKET" set-option -wq -t "$opencode_window" @drudwyn_agent opencode
 tmux -L "$SOCKET" set-option -wq -t "$codex_window" @drudwyn_message 'private prompt must never render'
 socket_path="$(tmux -L "$SOCKET" display-message -p '#{socket_path}')"
 server_pid="$(tmux -L "$SOCKET" display-message -p '#{pid}')"
@@ -36,6 +42,7 @@ printf '%s' "$safe" | grep -Fq '#[align=left]'
 printf '%s' "$safe" | grep -Fq '#[align=centre]'
 printf '%s' "$safe" | grep -Fq '#[align=right]'
 printf '%s' "$safe" | grep -Fq '>>'
+printf '%s' "$safe" | grep -Fq 'C '
 printf '%s' "$safe" | grep -Fq 'A '
 if printf '%s' "$safe" | grep -Fq 'private prompt'; then
   printf 'not ok: status bar crossed the content privacy boundary\n'; exit 1
@@ -46,6 +53,19 @@ fi
 printf 'ok: safe bar groups windows, signals overflow, and excludes content\n'
 
 tmux -L "$SOCKET" set-option -g @drudwyn-icon-mode nerd
+tmux -L "$SOCKET" set-option -g @drudwyn-agent-icon auto
+identity="$($ROOT/scripts/status-bar.sh bar "$codex_window" 160)"
+printf '%s' "$identity" | grep -Fq '✣ '
+printf '%s' "$identity" | grep -Fq '✦ '
+printf '%s' "$identity" | grep -Fq '⌬ '
+printf '%s' "$identity" | grep -Fq '#[bg=#f6c177,fg=#191724,bold]'
+printf '%s' "$identity" | grep -Fq '#[bg=#3e8fb0,fg=#faf4ed,bold]'
+tmux -L "$SOCKET" set-option -g @drudwyn-claude-icon 'λ'
+custom_identity="$($ROOT/scripts/status-bar.sh bar "$codex_window" 160)"
+printf '%s' "$custom_identity" | grep -Fq 'λ '
+tmux -L "$SOCKET" set-option -gu @drudwyn-claude-icon
+printf 'ok: status segments distinguish Codex, Claude, and OpenCode with per-agent overrides\n'
+
 tmux -L "$SOCKET" set-option -g @drudwyn-agent-icon bot
 nerd="$($ROOT/scripts/status-bar.sh bar "$codex_window" 120)"
 printf '%s' "$nerd" | grep -Fq '▶'

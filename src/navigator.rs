@@ -17,16 +17,33 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 
 use crate::{
     domain::{AgentKind, Lifecycle},
     theme::{Theme, Variant},
+    ui::{self, FooterTone},
 };
 
 const SEP: char = '\u{241f}';
 const FORMAT: &str = "#{session_name}␟#{window_id}␟#{window_index}␟#{window_name}␟#{pane_current_command}␟#{@drudwyn_state}␟#{@drudwyn_since}␟#{@drudwyn_branch}";
+const NAVIGATION_ACTIONS: &[(&str, &str)] = &[("j/k", "Move"), ("Enter", "Jump")];
+const WORKSPACE_ACTIONS: &[(&str, &str)] = &[
+    ("r", "Rename"),
+    ("x", "Kill"),
+    ("s", "Save"),
+    ("/", "Filter"),
+];
+const CLOSE_ACTION: &[(&str, &str)] = &[("Esc", "Close")];
+const CONFIRM_ACTION: &[(&str, &str)] = &[("y", "Confirm")];
+const CANCEL_ACTION: &[(&str, &str)] = &[("Esc/n", "Cancel")];
+const EDIT_ACTIONS: &[(&str, &str)] = &[("Enter", "Apply"), ("Backspace", "Delete")];
+const FILTER_ACTIONS: &[(&str, &str)] = &[
+    ("text", "Filter"),
+    ("Backspace", "Delete"),
+    ("Enter/Esc", "Done"),
+];
 
 #[derive(Clone)]
 struct Window {
@@ -41,6 +58,7 @@ struct Window {
     branch: Option<String>,
 }
 
+#[derive(Clone)]
 struct App {
     windows: Vec<Window>,
     visible: Vec<usize>,
@@ -52,6 +70,7 @@ struct App {
     notice: Option<String>,
     agent_icon: String,
     theme: Theme,
+    redact: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -202,6 +221,7 @@ pub fn run(variant: Variant) -> io::Result<()> {
         notice: None,
         agent_icon,
         theme: Theme::rose_pine(variant),
+        redact: tmux_output(&["show-option", "-gqv", "@drudwyn-redact-labels"])? == "on",
     };
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -296,14 +316,60 @@ fn event_loop(
 }
 
 fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
+    // Redact only the projection: selection, filtering and tmux targets retain
+    // their real identities for navigation and explicit user actions.
+    let mut projection;
+    let app = if app.redact {
+        projection = app.clone();
+        for item in &mut projection.windows {
+            item.name = format!("Workspace {}", item.id);
+            item.session = "private".into();
+            item.branch = item.branch.as_ref().map(|_| "private".into());
+        }
+        if let Some(target) = &mut projection.pending_kill {
+            target.name = "Workspace".into();
+            target.session = "private".into();
+        }
+        if let Some((_, name)) = &mut projection.pending_rename {
+            *name = "[redacted]".into();
+        }
+        if projection.filtering {
+            projection.filter = "[redacted]".into();
+        }
+        if projection.notice.is_some() {
+            projection.notice = Some(
+                if app
+                    .notice
+                    .as_deref()
+                    .is_some_and(|message| message.to_lowercase().contains("fail"))
+                {
+                    "Action failed; details hidden while labels are redacted".into()
+                } else {
+                    "Status details hidden while labels are redacted".into()
+                },
+            );
+        }
+        &projection
+    } else {
+        app
+    };
     let area = frame.area();
+    let footer_height = if app.pending_kill.is_some()
+        || app.pending_rename.is_some()
+        || app.notice.is_some()
+        || app.filtering
+    {
+        3
+    } else {
+        2
+    };
     let groups = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),
             Constraint::Percentage(42),
             Constraint::Min(5),
-            Constraint::Length(3),
+            Constraint::Length(footer_height),
         ])
         .split(area);
     let agents = app.windows.iter().filter(|item| item.managed).count();
@@ -336,32 +402,56 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
 
     render_group(frame, app, groups[1], false, " WORKSPACES ");
     render_group(frame, app, groups[2], true, " AGENTS ");
-    let footer = if let Some(target) = &app.pending_kill {
-        format!(
-            " y confirm · Esc/n cancel · Stops all panes/processes\n Kill workspace {} {}:{} ({})?",
+    if let Some(target) = &app.pending_kill {
+        let message = format!(
+            "Kill {} {}:{} ({})? Stops all panes and processes.",
             target.id, target.session, target.index, target.name
-        )
+        );
+        ui::render_footer(
+            frame,
+            groups[3],
+            app.theme,
+            &[CONFIRM_ACTION, CANCEL_ACTION],
+            ("CONFIRM", &message, FooterTone::Warning),
+        );
     } else if let Some((_, name)) = &app.pending_rename {
-        format!(
-            " Rename window › {name}_\n {}",
-            app.notice
-                .as_deref()
-                .unwrap_or("Enter apply · Esc cancel · Backspace delete")
-        )
+        let message = app
+            .notice
+            .as_deref()
+            .map(str::to_owned)
+            .unwrap_or_else(|| format!("Rename window › {name}_"));
+        ui::render_footer(
+            frame,
+            groups[3],
+            app.theme,
+            &[EDIT_ACTIONS, CANCEL_ACTION],
+            ("RENAME", &message, FooterTone::Info),
+        );
     } else if let Some(notice) = &app.notice {
-        notice.clone()
+        ui::render_footer(
+            frame,
+            groups[3],
+            app.theme,
+            &[NAVIGATION_ACTIONS, WORKSPACE_ACTIONS, CLOSE_ACTION],
+            ("STATUS", notice, FooterTone::Info),
+        );
     } else if app.filtering {
-        format!(" Filter › {}_", app.filter)
+        let message = format!("› {}_", app.filter);
+        ui::render_footer(
+            frame,
+            groups[3],
+            app.theme,
+            &[FILTER_ACTIONS],
+            ("FILTER", &message, FooterTone::Info),
+        );
     } else {
-        " j/k move  Enter jump  r rename  x kill  s save  / filter  Esc close ".into()
-    };
-    frame.render_widget(
-        Paragraph::new(footer)
-            .wrap(Wrap { trim: true })
-            .style(Style::default().fg(app.theme.muted))
-            .block(Block::default().borders(Borders::TOP)),
-        groups[3],
-    );
+        ui::render_action_bar(
+            frame,
+            groups[3],
+            app.theme,
+            &[NAVIGATION_ACTIONS, WORKSPACE_ACTIONS, CLOSE_ACTION],
+        );
+    }
 }
 
 fn render_group(frame: &mut ratatui::Frame<'_>, app: &App, area: Rect, agents: bool, title: &str) {
@@ -553,6 +643,7 @@ mod tests {
             notice: None,
             agent_icon: "󰀀".into(),
             theme: Theme::rose_pine(Variant::Moon),
+            redact: false,
         };
 
         assert_eq!(handle_key(&mut app, KeyCode::Enter), NavigationAction::Jump);
@@ -570,6 +661,7 @@ mod tests {
             notice: None,
             agent_icon: "A".into(),
             theme: Theme::rose_pine(Variant::Moon),
+            redact: false,
         }
     }
 

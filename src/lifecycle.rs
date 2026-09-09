@@ -31,15 +31,15 @@ pub fn scan() -> Result<(), LifecycleError> {
             continue;
         }
         let window_id = fields[0];
-        let agent = AgentKind::from_command(fields[2]);
-        if agent.is_none() {
+        let Some(agent) = AgentKind::from_command(fields[2]) else {
             if !fields[4].is_empty() && fields[5] != "hook" {
                 clear(window_id)?;
             }
             continue;
-        }
+        };
 
         // Remove content retained by v1 as soon as v2 observes a workspace.
+        set_option(window_id, "@drudwyn_agent", agent.command())?;
         set_option(window_id, "@drudwyn_message", "")?;
         if fields[3] == "1" {
             set_state(window_id, Lifecycle::Failed, "process")?;
@@ -58,6 +58,7 @@ pub fn hook(agent: AgentKind, event: &str) -> Result<(), LifecycleError> {
     if window_id.is_empty() {
         return Ok(());
     }
+    set_option(&window_id, "@drudwyn_agent", agent.command())?;
     set_state(&window_id, lifecycle, "hook")
 }
 
@@ -102,31 +103,61 @@ fn set_state(window_id: &str, lifecycle: Lifecycle, source: &str) -> Result<(), 
             set_option(window_id, "@drudwyn_attention_since", "")?;
         }
     }
-    let (symbol, color_option, fallback) = match lifecycle {
-        Lifecycle::Working | Lifecycle::Starting => ("", "@drudwyn-working-color", "#9ccfd8"),
-        Lifecycle::Waiting => ("●", "@drudwyn-needs-input-color", "#f6c177"),
-        Lifecycle::Review => ("●", "@drudwyn-done-color", "#31748f"),
-        Lifecycle::Failed => ("●", "@drudwyn-failed-color", "#eb6f92"),
-        Lifecycle::Unknown => ("", "", "default"),
+    set_option(window_id, "@drudwyn_state", state)?;
+    set_option(window_id, "@drudwyn_source", source)?;
+    set_option(window_id, "@drudwyn_message", "")?;
+    write_style(window_id, lifecycle)
+}
+
+/// Repaint existing markers without altering lifecycle evidence or timestamps.
+pub fn refresh_styles() -> Result<(), LifecycleError> {
+    let windows = tmux_output(&["list-windows", "-a", "-F", "#{window_id}␟#{@drudwyn_state}"])?;
+    for line in windows.lines() {
+        if let Some((window, state)) = line.split_once(SEPARATOR) {
+            if !state.is_empty() {
+                write_style(window, Lifecycle::from_tmux(state))?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn write_style(window_id: &str, lifecycle: Lifecycle) -> Result<(), LifecycleError> {
+    let theme = tmux_output(&["show-option", "-gqv", "@drudwyn-theme"])?;
+    let dawn = theme == "dawn";
+    let (name, fallback) = match lifecycle {
+        Lifecycle::Working | Lifecycle::Starting => {
+            ("working", if dawn { "#56949f" } else { "#9ccfd8" })
+        }
+        Lifecycle::Waiting => ("needs-input", if dawn { "#ea9d34" } else { "#f6c177" }),
+        Lifecycle::Review => (
+            "done",
+            if dawn {
+                "#286983"
+            } else if theme == "rose-pine" {
+                "#31748f"
+            } else {
+                "#3e8fb0"
+            },
+        ),
+        Lifecycle::Failed => ("failed", if dawn { "#b4637a" } else { "#eb6f92" }),
+        Lifecycle::Unknown => return Ok(()),
     };
-    let configured_color = if color_option.is_empty() {
-        String::new()
-    } else {
-        tmux_output(&["show-option", "-gqv", color_option])?
-    };
-    let color = if configured_color.is_empty() {
+    let configured_color =
+        tmux_output(&["show-option", "-gqv", &format!("@drudwyn-{name}-color")])?;
+    let color = if configured_color.is_empty() || configured_color == "default" {
         fallback
     } else {
         &configured_color
     };
-    set_option(window_id, "@drudwyn_state", state)?;
-    set_option(window_id, "@drudwyn_source", source)?;
-    set_option(window_id, "@drudwyn_message", "")?;
-    let marker = if symbol.is_empty() {
-        String::new()
+    let configured_symbol =
+        tmux_output(&["show-option", "-gqv", &format!("@drudwyn-{name}-symbol")])?;
+    let symbol = if configured_symbol.is_empty() {
+        "●"
     } else {
-        format!("#[fg={color}]{symbol}#[default] ")
+        &configured_symbol
     };
+    let marker = format!("#[fg={color}]{symbol}#[default] ");
     set_option(window_id, "@drudwyn_marker", &marker)?;
     set_option(
         window_id,
@@ -145,6 +176,7 @@ fn clear(window_id: &str) -> Result<(), LifecycleError> {
         "@drudwyn_attention_since",
         "@drudwyn_marker",
         "@drudwyn_window_style",
+        "@drudwyn_agent",
     ] {
         set_option(window_id, option, "")?;
     }

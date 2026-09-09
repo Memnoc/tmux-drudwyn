@@ -20,7 +20,7 @@ for sensitive or organisational workflows without a separate assessment.
 | Local datum | Immediate purpose | Lifetime | Surface |
 |-------------|-------------------|----------|---------|
 | tmux session, window, and pane IDs | route navigation and lifecycle updates | current command or tmux session | internal routing and click map |
-| process executable name | identify Codex, Claude Code, or OpenCode | current scan | agent label |
+| process executable name and derived agent kind | identify Codex, Claude Code, or OpenCode | current scan or tmux session | agent symbol and label |
 | working directory, Git repository, worktree, and branch | identify workspaces and enforce safe start/finish | current command or tmux session | cockpit/sidebar unless redacted |
 | clean/dirty state and merge ancestry | prevent unsafe worktree removal | current command | fixed readiness state |
 | lifecycle state and timestamps | show working, waiting, review, or failed state | current tmux session | cockpit, HUD, and sidebar |

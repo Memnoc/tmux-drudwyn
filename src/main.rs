@@ -5,7 +5,7 @@ use tmux_drudwyn::{
     config::Config,
     discovery,
     domain::AgentKind,
-    lifecycle, navigator, session_navigator,
+    lifecycle, navigator, session_navigator, settings,
     theme::{Theme, Variant},
     workspace::{self, Start},
 };
@@ -57,6 +57,11 @@ enum Command {
     },
     /// Open the compact tmux session navigator.
     Sessions {
+        #[arg(long, value_enum, default_value_t = ThemeArg::Moon)]
+        theme: ThemeArg,
+    },
+    /// Open the interactive tmux options editor.
+    Settings {
         #[arg(long, value_enum, default_value_t = ThemeArg::Moon)]
         theme: ThemeArg,
     },
@@ -207,6 +212,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Command::Cockpit { theme, start } => cockpit::run(theme.into(), start)?,
         Command::Navigator { theme } => navigator::run(theme.into())?,
         Command::Sessions { theme } => session_navigator::run(theme.into())?,
+        Command::Settings { theme } => settings::run(theme.into())?,
         Command::Workspace { command } => match command {
             WorkspaceCommand::Start {
                 repo,

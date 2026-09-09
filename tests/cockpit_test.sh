@@ -67,7 +67,7 @@ printf '%s\n' "$frame" | grep -Fq '[1] Codex' || {
 tmux -L "$SOCKET" send-keys -t "$cockpit_pane" 1
 sleep 0.2
 frame="$(tmux -L "$SOCKET" capture-pane -p -t "$cockpit_pane")"
-printf '%s\n' "$frame" | grep -Fq 'Enter create · Esc cancel' || {
+printf '%s\n' "$frame" | grep -Fq '[Enter] Create  │  [Esc] Cancel' || {
   printf 'not ok: Start does not confirm the generated workspace\n'; exit 1
 }
 tmux -L "$SOCKET" send-keys -t "$cockpit_pane" Enter

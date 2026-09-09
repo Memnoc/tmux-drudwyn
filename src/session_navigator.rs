@@ -13,15 +13,32 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 
-use crate::theme::{Theme, Variant};
+use crate::{
+    theme::{Theme, Variant},
+    ui::{self, FooterTone},
+};
 
 const SEP: char = '\u{241f}';
 const FORMAT: &str = "#{session_name}␟#{session_windows}␟#{session_attached}␟#{session_id}";
-const FOOTER_CONTROLS: &str =
-    " j/k move  Enter switch  r rename  x kill  s save  / filter  Esc close ";
+const NAVIGATION_ACTIONS: &[(&str, &str)] = &[("j/k", "Move"), ("Enter", "Switch")];
+const SESSION_ACTIONS: &[(&str, &str)] = &[
+    ("r", "Rename"),
+    ("x", "Kill"),
+    ("s", "Save"),
+    ("/", "Filter"),
+];
+const CLOSE_ACTION: &[(&str, &str)] = &[("Esc", "Close")];
+const CONFIRM_ACTION: &[(&str, &str)] = &[("y", "Confirm")];
+const CANCEL_ACTION: &[(&str, &str)] = &[("Esc/n", "Cancel")];
+const EDIT_ACTIONS: &[(&str, &str)] = &[("Enter", "Apply"), ("Backspace", "Delete")];
+const FILTER_ACTIONS: &[(&str, &str)] = &[
+    ("text", "Filter"),
+    ("Backspace", "Delete"),
+    ("Enter/Esc", "Done"),
+];
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct Session {
@@ -31,6 +48,7 @@ struct Session {
     attached: usize,
 }
 
+#[derive(Clone)]
 struct App {
     sessions: Vec<Session>,
     visible: Vec<usize>,
@@ -42,6 +60,7 @@ struct App {
     pending_rename: Option<(String, String)>,
     notice: Option<String>,
     theme: Theme,
+    redact: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -182,6 +201,7 @@ pub fn run(variant: Variant) -> io::Result<()> {
         pending_rename: None,
         notice: None,
         theme: Theme::rose_pine(variant),
+        redact: tmux_output(&["show-option", "-gqv", "@drudwyn-redact-labels"])? == "on",
     };
 
     enable_raw_mode()?;
@@ -277,13 +297,57 @@ fn event_loop(
 }
 
 fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
+    let mut projection;
+    let app = if app.redact {
+        projection = app.clone();
+        for session in &mut projection.sessions {
+            if session.name == projection.current {
+                projection.current = format!("Session {}", session.id);
+            }
+            session.name = format!("Session {}", session.id);
+        }
+        if let Some(target) = &mut projection.pending_kill {
+            target.name = "private".into();
+        }
+        if let Some((_, name)) = &mut projection.pending_rename {
+            *name = "[redacted]".into();
+        }
+        if projection.filtering {
+            projection.filter = "[redacted]".into();
+        }
+        if projection.notice.is_some() {
+            projection.notice = Some(
+                if app
+                    .notice
+                    .as_deref()
+                    .is_some_and(|message| message.to_lowercase().contains("fail"))
+                {
+                    "Action failed; details hidden while labels are redacted".into()
+                } else {
+                    "Status details hidden while labels are redacted".into()
+                },
+            );
+        }
+        &projection
+    } else {
+        app
+    };
     let area = frame.area();
+    let footer_height = if app.pending_kill.is_some()
+        || app.pending_rename.is_some()
+        || app.notice.is_some()
+        || app.filtering
+    {
+        3
+    } else {
+        2
+    };
     let groups = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),
             Constraint::Min(3),
-            Constraint::Length(3),
+            Constraint::Length(footer_height),
         ])
         .split(area);
     let attached = app
@@ -348,32 +412,56 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
     );
     frame.render_stateful_widget(list, groups[1], &mut state);
 
-    let footer = if let Some(target) = &app.pending_kill {
-        format!(
-            " y confirm · Esc/n cancel · Closes session\n Kill session {} {} ({} windows)?",
+    if let Some(target) = &app.pending_kill {
+        let message = format!(
+            "Kill session {} {} ({} windows)?",
             target.id, target.name, target.windows
-        )
+        );
+        ui::render_footer(
+            frame,
+            groups[2],
+            app.theme,
+            &[CONFIRM_ACTION, CANCEL_ACTION],
+            ("CONFIRM", &message, FooterTone::Warning),
+        );
     } else if let Some((_, name)) = &app.pending_rename {
-        format!(
-            " Rename session › {name}_\n {}",
-            app.notice
-                .as_deref()
-                .unwrap_or("Enter apply · Esc cancel · Backspace delete")
-        )
+        let message = app
+            .notice
+            .as_deref()
+            .map(str::to_owned)
+            .unwrap_or_else(|| format!("Rename session › {name}_"));
+        ui::render_footer(
+            frame,
+            groups[2],
+            app.theme,
+            &[EDIT_ACTIONS, CANCEL_ACTION],
+            ("RENAME", &message, FooterTone::Info),
+        );
     } else if let Some(notice) = &app.notice {
-        notice.clone()
+        ui::render_footer(
+            frame,
+            groups[2],
+            app.theme,
+            &[NAVIGATION_ACTIONS, SESSION_ACTIONS, CLOSE_ACTION],
+            ("STATUS", notice, FooterTone::Info),
+        );
     } else if app.filtering {
-        format!(" Filter › {}_", app.filter)
+        let message = format!("› {}_", app.filter);
+        ui::render_footer(
+            frame,
+            groups[2],
+            app.theme,
+            &[FILTER_ACTIONS],
+            ("FILTER", &message, FooterTone::Info),
+        );
     } else {
-        FOOTER_CONTROLS.into()
-    };
-    frame.render_widget(
-        Paragraph::new(footer)
-            .wrap(Wrap { trim: true })
-            .style(Style::default().fg(app.theme.muted))
-            .block(Block::default().borders(Borders::TOP)),
-        groups[2],
-    );
+        ui::render_action_bar(
+            frame,
+            groups[2],
+            app.theme,
+            &[NAVIGATION_ACTIONS, SESSION_ACTIONS, CLOSE_ACTION],
+        );
+    }
 }
 
 fn discover() -> io::Result<Vec<Session>> {
@@ -455,6 +543,7 @@ mod tests {
             pending_rename: None,
             notice: None,
             theme: Theme::rose_pine(Variant::Moon),
+            redact: false,
         };
         assert_eq!(
             handle_key(&mut app, KeyCode::Enter),
@@ -463,10 +552,6 @@ mod tests {
         assert!(!app.filtering);
     }
 
-    #[test]
-    fn footer_controls_fit_the_session_popup() {
-        assert!(FOOTER_CONTROLS.chars().count() <= 72);
-    }
     fn populated_app() -> App {
         App {
             sessions: parse_sessions("first␟1␟0␟$1\nsecond␟1␟0␟$2"),
@@ -479,6 +564,7 @@ mod tests {
             notice: None,
             current: String::new(),
             theme: Theme::rose_pine(Variant::Moon),
+            redact: false,
         }
     }
 

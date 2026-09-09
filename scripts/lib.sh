@@ -19,6 +19,10 @@ is_agent_command() {
   esac
 }
 
+set_window_agent() {
+  tmux set-option -wq -t "$1" @drudwyn_agent "${2##*/}"
+}
+
 strip_terminal_noise() {
   LC_ALL=C sed \
     -e $'s/\033\[[0-9;?]*[ -\/]*[@-~]//g' \
@@ -143,12 +147,18 @@ symbol_for_state() {
 }
 
 color_for_state() {
+  local theme value name fallback
+  theme="$(tmux_option @drudwyn-theme moon)"
   case "$1" in
-    working) tmux_option @drudwyn-working-color '#9ccfd8' ;;
-    needs_input) tmux_option @drudwyn-needs-input-color '#f6c177' ;;
-    done) tmux_option @drudwyn-done-color '#a6da95' ;;
-    failed) tmux_option @drudwyn-failed-color '#ed8796' ;;
+    working) name=working; fallback='#9ccfd8'; [ "$theme" != dawn ] || fallback='#56949f' ;;
+    needs_input) name=needs-input; fallback='#f6c177'; [ "$theme" != dawn ] || fallback='#ea9d34' ;;
+    done) name=done; fallback='#3e8fb0'; [ "$theme" != dawn ] || fallback='#286983'; [ "$theme" != rose-pine ] || fallback='#31748f' ;;
+    failed) name=failed; fallback='#eb6f92'; [ "$theme" != dawn ] || fallback='#b4637a' ;;
+    *) printf default; return ;;
   esac
+  value="$(tmux_option "@drudwyn-$name-color" default)"
+  [ "$value" != default ] || value="$fallback"
+  printf '%s' "$value"
 }
 
 set_window_state() {
@@ -171,6 +181,7 @@ set_window_state() {
     tmux set-option -wq -t "$window_id" @drudwyn_window_style ''
     tmux set-option -wq -t "$window_id" @drudwyn_message ''
     tmux set-option -wq -t "$window_id" @drudwyn_source ''
+    tmux set-option -wq -t "$window_id" @drudwyn_agent ''
     tmux set-option -wq -t "$window_id" @drudwyn_repo ''
     tmux set-option -wq -t "$window_id" @drudwyn_branch ''
     tmux set-option -wq -t "$window_id" @drudwyn_worktree ''

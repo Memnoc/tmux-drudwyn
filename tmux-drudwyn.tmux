@@ -3,6 +3,7 @@
 set -eu
 
 PLUGIN_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+tmux set-option -gq @drudwyn_plugin_dir "$PLUGIN_DIR"
 
 bash "$PLUGIN_DIR/scripts/migrate-options.sh"
 
@@ -17,6 +18,7 @@ install_window_formats() {
   style_format='#{@drudwyn_window_style}'
   for format in window-status-format window-status-current-format; do
     current="$(tmux show-option -gqv "$format")"
+    current="${current//'#{@drudwyn_window_style}#I#[default]'/#I}"
     current="${current//'#{@agent_watch_marker}'/}"
     current="${current//'#{@agent_watch_window_style}'/}"
     current="${current//'#{@drudwyn_marker}'/}"
@@ -25,7 +27,7 @@ install_window_formats() {
       current="#{@drudwyn_marker}${current}"
     fi
     if [ "$(option @drudwyn-color-window-names on)" = on ]; then
-      current="${current//#I/${style_format}#I}"
+      current="${current//#I/${style_format}#I#[default]}"
     fi
     tmux set-option -gq "$format" "$current"
   done
@@ -63,6 +65,8 @@ if [ "$(option @drudwyn-sidebar off)" != on ]; then
 fi
 if [ "$(option @drudwyn-hud on)" = on ]; then
   "$PLUGIN_DIR/scripts/hud-install.sh"
+else
+  bash "$PLUGIN_DIR/scripts/hud-install.sh" --disable
 fi
 
 tmux bind-key "$(option @drudwyn-next-key a)" run-shell "$PLUGIN_DIR/scripts/next-attention.sh"
@@ -72,6 +76,8 @@ tmux bind-key "$(option @drudwyn-finish-key X)" display-popup -EE -w 70% -h 30% 
   -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/worktree-finish.sh"
 tmux bind-key "$(option @drudwyn-help-key H)" display-popup -E -w 72 -h 24 \
   "$PLUGIN_DIR/scripts/help.sh"
+tmux bind-key "$(option @drudwyn-options-key O)" display-popup -EE -w 96 -h 30 \
+  "$PLUGIN_DIR/scripts/settings.sh"
 if [ "$(option @drudwyn-v2 on)" = on ]; then
   tmux bind-key "$(option @drudwyn-worktree-key W)" display-popup -EE -w 96 -h 20 \
     -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/v2.sh cockpit --start"
@@ -83,10 +89,10 @@ else
   tmux bind-key "$(option @drudwyn-cockpit-key P)" display-popup -EE -w 78 -h 26 \
     -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/cockpit.sh"
 fi
-tmux bind-key "$(option @drudwyn-navigator-key w)" display-popup -EE -w 84 -h 24 \
+tmux bind-key "$(option @drudwyn-navigator-key w)" display-popup -EE -w 96 -h 24 \
   -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/v2.sh navigator"
 tmux bind-key "$(option @drudwyn-native-navigator-key C-w)" choose-tree -Zw
-tmux bind-key "$(option @drudwyn-session-key s)" display-popup -EE -w 72 -h 18 \
+tmux bind-key "$(option @drudwyn-session-key s)" display-popup -EE -w 96 -h 18 \
   -d '#{pane_current_path}' "$PLUGIN_DIR/scripts/v2.sh sessions"
 tmux bind-key "$(option @drudwyn-native-session-key S)" choose-tree -Zs
 tmux bind-key '{' run-shell "$PLUGIN_DIR/scripts/safe-swap.sh -U"

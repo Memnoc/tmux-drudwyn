@@ -26,8 +26,28 @@ use crate::{
     discovery,
     domain::{AgentKind, GitState, Lifecycle, Workspace},
     theme::{Theme, Variant},
+    ui::{self, FooterTone},
     workspace::{self, Start},
 };
+
+const COCKPIT_NAVIGATION: &[(&str, &str)] = &[("j/k", "Move"), ("Enter", "Open")];
+const COCKPIT_ACTIONS: &[(&str, &str)] = &[
+    ("n", "New"),
+    ("f", "Finish"),
+    ("/", "Filter"),
+    ("r", "Refresh"),
+];
+const CLOSE_ACTION: &[(&str, &str)] = &[("q/Esc", "Close")];
+const FILTER_ACTIONS: &[(&str, &str)] = &[
+    ("text", "Filter"),
+    ("Backspace", "Delete"),
+    ("Enter/Esc", "Done"),
+];
+const CREATE_ACTIONS: &[(&str, &str)] = &[("Enter", "Create"), ("Tab", "Agent"), ("F2", "Base")];
+const CREATE_BLOCKED_ACTIONS: &[(&str, &str)] = &[("Tab", "Agent"), ("F2", "Base")];
+const CANCEL_ACTION: &[(&str, &str)] = &[("Esc", "Cancel")];
+const FINISH_ACTION: &[(&str, &str)] = &[("y", "Finish")];
+const FINISH_CANCEL_ACTION: &[(&str, &str)] = &[("n/Esc", "Cancel")];
 
 #[derive(Debug, Error)]
 pub enum CockpitError {
@@ -354,6 +374,11 @@ fn event_loop(
 
 fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
     let area = frame.area();
+    let footer_height = if app.filtering || app.error.is_some() || !app.filter.is_empty() {
+        3
+    } else {
+        2
+    };
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -363,7 +388,7 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
                 3
             }),
             Constraint::Min(5),
-            Constraint::Length(4),
+            Constraint::Length(footer_height),
         ])
         .split(area);
     render_header(frame, app, layout[0]);
@@ -424,14 +449,11 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
                 app.start_agent().label()
             )),
             Line::from(""),
-            Line::styled(
-                if app.start_point.is_some() {
-                    "Enter create · Esc cancel"
-                } else {
-                    "Base unavailable · F2 change · Esc cancel"
-                },
-                Style::default().fg(app.theme.muted),
-            ),
+            if app.start_point.is_some() {
+                ui::action_line(&[CREATE_ACTIONS, CANCEL_ACTION], app.theme)
+            } else {
+                ui::action_line(&[CREATE_BLOCKED_ACTIONS, CANCEL_ACTION], app.theme)
+            },
         ];
         frame.render_widget(Clear, modal);
         frame.render_widget(
@@ -456,10 +478,7 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &App) {
             Line::from("Requires a clean worktree integrated into its base."),
             Line::from("The branch will be retained."),
             Line::from(""),
-            Line::styled(
-                "y finish · n/Esc cancel",
-                Style::default().fg(app.theme.muted),
-            ),
+            ui::action_line(&[FINISH_ACTION, FINISH_CANCEL_ACTION], app.theme),
         ];
         let modal = centered(area, 70, 11);
         frame.render_widget(Clear, modal);
@@ -819,24 +838,39 @@ fn age(since: Option<u64>) -> String {
 }
 
 fn render_footer(frame: &mut ratatui::Frame<'_>, app: &App, area: Rect) {
-    let prompt = if app.filtering {
-        format!("Filter › {}_", app.filter)
-    } else if app.filter.is_empty() {
-        "Enter review · n new · f finish · j/k move · / filter · r refresh · q close".into()
+    if app.filtering {
+        let message = format!("› {}_", app.filter);
+        ui::render_footer(
+            frame,
+            area,
+            app.theme,
+            &[FILTER_ACTIONS],
+            ("FILTER", &message, FooterTone::Info),
+        );
+        return;
+    }
+
+    if app.error.is_none() && app.filter.is_empty() {
+        ui::render_action_bar(
+            frame,
+            area,
+            app.theme,
+            &[COCKPIT_NAVIGATION, COCKPIT_ACTIONS, CLOSE_ACTION],
+        );
+        return;
+    }
+
+    let (label, message, tone) = if let Some(error) = &app.error {
+        ("ERROR", error.as_str(), FooterTone::Error)
     } else {
-        format!(
-            "Filter: {} · Enter jump · / edit · r refresh · q close",
-            app.filter
-        )
+        ("FILTER", app.filter.as_str(), FooterTone::Info)
     };
-    let error = app.error.as_deref().unwrap_or("");
-    frame.render_widget(
-        Paragraph::new(vec![
-            Line::styled(error, Style::default().fg(app.theme.love)),
-            Line::styled(prompt, Style::default().fg(app.theme.muted)),
-        ])
-        .block(Block::default().borders(Borders::TOP)),
+    ui::render_footer(
+        frame,
         area,
+        app.theme,
+        &[COCKPIT_NAVIGATION, COCKPIT_ACTIONS, CLOSE_ACTION],
+        (label, message, tone),
     );
 }
 

@@ -4,6 +4,20 @@
 
 Defaults work without configuration. You can set overrides before loading the plugin.
 
+Press `prefix + O` to open the Rose Pine options editor. It lists every current
+Drudwyn option by category: use `j`/`k` to move, `h`/`l` or `Tab` to change
+category, `Enter` to choose or edit, `e` to type a custom value, and `r` to
+restore the default. The selected option has explanatory sub-text beneath the
+keyboard controls describing its effect,
+dependencies, and whether it affects existing views or future workspaces.
+Changes apply immediately to the current tmux server, including shortcuts and
+HUD/sidebar layout. Themes preview inside the editor; reopen other popups to
+pick up theme, icon, or redaction changes. Colours cycle through presets with
+`Enter`; `e` accepts a custom `#RRGGBB` value. Invalid choices, invalid key names,
+and shortcuts already occupied by another binding are rejected. Add
+the values you want to retain to `~/.tmux.conf` because tmux server options do
+not survive a server restart.
+
 ### Common options
 
 | Option                       | Default | Purpose                                    |
@@ -13,7 +27,7 @@ Defaults work without configuration. You can set overrides before loading the pl
 | `@drudwyn-branch-prefix` | `work/` | Prefix for generated branches              |
 | `@drudwyn-theme`         | `moon`  | `rose-pine`, `moon`, or `dawn`             |
 | `@drudwyn-icon-mode`     | `auto`  | Prefer Nerd Fonts when detected; `nerd` forces them, `safe` uses ASCII |
-| `@drudwyn-agent-icon`    | `auto`  | Prefer the installed hound, else bot; `hound` forces it, `bot` opts out |
+| `@drudwyn-agent-icon`    | `auto`  | Agent icon policy; `hound`, `bot`, or a custom glyph overrides all agents |
 | `@drudwyn-redact-labels` | `off`   | Hide workspace labels while screen sharing |
 | `@drudwyn-sidebar`       | `off`   | Enable the legacy sidebar                  |
 
@@ -32,7 +46,7 @@ set -g @drudwyn-theme rose-pine
 | Option                                | Default | Purpose                                                                |
 | ------------------------------------- | ------- | ---------------------------------------------------------------------- |
 | `@drudwyn-interval`               | `2`     | Agent scan interval in seconds                                         |
-| `@drudwyn-git-interval`           | `10`    | Git refresh interval in seconds                                        |
+| `@drudwyn-git-interval`           | `10`    | Legacy Git cache refresh interval in seconds; Rust views read Git live |
 | `@drudwyn-next-key`               | `a`     | Jump-to-attention key                                                  |
 | `@drudwyn-sidebar-key`            | `Space` | Sidebar toggle key                                                     |
 | `@drudwyn-restart-key`            | `A`     | Sidebar restart key                                                    |
@@ -44,25 +58,44 @@ set -g @drudwyn-theme rose-pine
 | `@drudwyn-session-key`            | `s`     | Session navigator key                                                  |
 | `@drudwyn-native-session-key`     | `S`     | Native tmux session tree key                                           |
 | `@drudwyn-help-key`               | `H`     | Help key                                                               |
+| `@drudwyn-options-key`            | `O`     | Options editor key                                                     |
 | `@drudwyn-v2`                     | `on`    | Rust implementation; `off` selects the content-reading legacy fallback |
-| `@drudwyn-hud`                    | `on`    | Lifecycle HUD                                                          |
-| `@drudwyn-status`                 | `off`   | Legacy status display                                                  |
+| `@drudwyn-hud`                    | `on`    | Clustered status bar; off restores the previous tmux status layout      |
+| `@drudwyn-status`                 | `off`   | Lifecycle symbols in the native tmux window list, visible with HUD off |
 | `@drudwyn-sidebar-width`          | `3`     | Collapsed sidebar width                                                |
 | `@drudwyn-sidebar-expanded-width` | `38`    | Expanded sidebar width                                                 |
 
 Lifecycle colors and symbols use `@drudwyn-{working,needs-input,done,failed}-color`
-and `@drudwyn-{working,needs-input,done,failed}-symbol`.
+and `@drudwyn-{working,needs-input,done,failed}-symbol`. Colours default to the
+selected theme (`default` in the menu) and affect the clustered status bar and
+native window markers. Symbols default to `●` and affect the native window list
+when `@drudwyn-status` is on; the HUD uses agent identity icons instead.
+`@drudwyn-color-window-names` controls lifecycle colouring of window numbers;
+attention badges retain their contrasting text. Separator colour also follows
+the theme unless overridden.
+
+The HUD saves the existing global status layout before replacing it. Installs
+from before this backup mechanism cannot recover the old layout automatically;
+disabling those HUDs restores tmux defaults. Reload your tmux configuration to
+restore a previously configured custom bar.
 
 </details>
 
 ## Icons and font fallback
 
-The status bar, workspace navigator, and cockpit details share the same icon
-settings. With no overrides, local Fontconfig detection prefers Nerd Font
-symbols and the hound at `U+F0000` from **Drudwyn Symbols**. If that font is
-missing, agent icons use the Nerd Font bot. If the Nerd Font glyphs are missing
-or detection is unavailable, agent icons use `A` and the status bar uses ASCII
-labels for Git and overflow.
+The status bar identifies supported agents with distinct single-cell symbols:
+Codex `✣`, Claude `✦`, and OpenCode `⌬`. In safe mode these become `C`, `A`, and
+`O`. Lifecycle color remains separate from agent identity, so the symbol says
+which agent is running while its color says whether it is working, waiting,
+ready for review, or failed. Waiting, review-ready, and failed agents use a
+filled high-contrast badge so work needing attention stands apart from active
+work at a glance.
+
+The workspace navigator and cockpit details use the Drudwyn hound at `U+F0000`
+when **Drudwyn Symbols** is installed, then the Nerd Font bot as a fallback.
+Unknown agents in the status bar use the same generic fallback. If the required
+fonts are missing or detection is unavailable, generic agent icons use `A` and
+the status bar uses ASCII labels for Git and overflow.
 
 Install a Nerd Font and select it in your terminal. Install
 [`DrudwynSymbols-Regular.ttf`](../assets/brand/DrudwynSymbols-Regular.ttf) alongside
@@ -90,6 +123,11 @@ share the global icon settings. Set overrides for the terminal you use:
 set -g @drudwyn-icon-mode auto
 set -g @drudwyn-agent-icon auto
 
+# Optional status-bar identity overrides.
+# set -g @drudwyn-codex-icon '✣'
+# set -g @drudwyn-claude-icon '✦'
+# set -g @drudwyn-opencode-icon '⌬'
+
 # To opt out of the hound while keeping detected Nerd Font symbols:
 # set -g @drudwyn-agent-icon bot
 
@@ -101,12 +139,13 @@ set -g @drudwyn-agent-icon auto
 # set -g @drudwyn-icon-mode safe
 ```
 
-Explicit `nerd` and `hound` bypass detection; safe mode always wins over the
-agent selection. Existing custom glyph values remain supported. Setting
-`@drudwyn-agent-icon bot` is now the way to restore the bot; unsetting it restores
-automatic hound preference. If fallback selects the wrong font, map `U+F0000`
-to **Drudwyn Symbols** in your terminal. Reload tmux configuration and reopen
-existing navigator/cockpit popups to apply icon changes.
+Explicit `nerd` and `hound` bypass detection; safe mode always wins over icon
+selection. A non-`auto` `@drudwyn-agent-icon` remains the global override and
+replaces every provider symbol. With the global option on `auto`, the three
+provider-specific options override their individual defaults. If fallback
+selects the wrong font, map `U+F0000` to **Drudwyn Symbols** in your terminal.
+Reload tmux configuration and reopen existing navigator/cockpit popups to apply
+icon changes.
 
 ## Upgrading existing options
 

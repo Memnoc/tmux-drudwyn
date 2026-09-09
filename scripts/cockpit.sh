@@ -36,12 +36,12 @@ render() {
   printf '  %bCurrent repo:%b %s' "$(color '144;140;170')" "$reset" "$repo_name"
   printf '   %s worktrees · %s dirty\n' "$worktrees" "$dirty"
   printf '  %bFleet:%b %s working · %s waiting · %s review\n\n' "$(color '144;140;170')" "$reset" "$working" "$waiting" "$review"
-  printf '  %b1-4 choose · q/Esc close%b' "$(color '144;140;170')" "$reset"
+  printf '  %b[1-4] Choose  │  [q/Esc] Close%b\n' "$(color '144;140;170')" "$reset"
 }
 
 pause_with_error() {
   printf '\n  %b%s%b\n' "$(color '235;111;146')" "$1" "$reset"
-  printf '  %bPress any key to return%b' "$(color '144;140;170')" "$reset"
+  printf '  %b[Any key] Return%b\n' "$(color '144;140;170')" "$reset"
   IFS= read -rsn1 _
 }
 
@@ -74,7 +74,7 @@ start_workspace() {
   printf '  Repository  %s\n' "$repo"
   printf '  Branch      %b%s%b\n' "$(color '196;167;231')" "$branch" "$reset"
   printf '  Agent       %s\n\n' "$agent"
-  printf '  %bEnter create · Esc cancel%b' "$(color '144;140;170')" "$reset"
+  printf '  %b[Enter] Create  │  [Esc] Cancel%b\n' "$(color '144;140;170')" "$reset"
   IFS= read -rsn1 agent_key
   [ "$agent_key" != $'\033' ] || return
 
@@ -105,7 +105,7 @@ review_workspace() {
     printf '  %b[%s]%b %b%s%b  %s\n' "$(color '166;218;149')" "$count" "$reset" "$bold" "${branch:-workspace}" "$reset" "$label"
     printf '      %s\n\n' "${message:-No summary available}"
   done <<< "$rows"
-  printf '  %b1-%s jump to workspace · Esc back%b' "$(color '144;140;170')" "$count" "$reset"
+  printf '  %b[1-%s] Open workspace  │  [Esc] Back%b\n' "$(color '144;140;170')" "$count" "$reset"
   while IFS= read -rsn1 choice; do
     [ "$choice" != $'\033' ] || return
     case "$choice" in [1-9])
@@ -136,7 +136,7 @@ jump_workspace() {
     printf '  %b[%s]%b %b%-24s%b %s\n' "$(color '156;207;216')" "$count" "$reset" "$bold" "${branch:-$name}" "$reset" "$label"
     printf '      %s:%s\n\n' "$session" "$name"
   done <<< "$rows"
-  printf '  %b1-%s jump · Esc back%b' "$(color '144;140;170')" "$count" "$reset"
+  printf '  %b[1-%s] Open  │  [Esc] Back%b\n' "$(color '144;140;170')" "$count" "$reset"
   while IFS= read -rsn1 choice; do
     [ "$choice" != $'\033' ] || return
     case "$choice" in [1-9])
@@ -180,7 +180,7 @@ finish_workspace() {
     printf '      CLEAN · merged into %s\n' "$base_branch"
     printf '      %s\n\n' "$worktree"
   done <<< "$candidates"
-  printf '  %b1-%s finish · Esc back%b' "$(color '144;140;170')" "$count" "$reset"
+  printf '  %b[1-%s] Finish  │  [Esc] Back%b\n' "$(color '144;140;170')" "$count" "$reset"
   while IFS= read -rsn1 choice; do
     [ "$choice" != $'\033' ] || return
     case "$choice" in [1-9])

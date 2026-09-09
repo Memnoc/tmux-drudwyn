@@ -10,6 +10,7 @@ fi
 payload="$(cat)"
 window_id="${TMUX_PANE:+$(tmux display-message -p -t "$TMUX_PANE" '#{window_id}')}"
 [ -n "$window_id" ] || exit 0
+set_window_agent "$window_id" claude
 
 json_value() {
   command -v jq >/dev/null 2>&1 || return

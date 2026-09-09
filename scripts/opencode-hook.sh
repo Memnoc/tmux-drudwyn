@@ -10,6 +10,7 @@ fi
 message="${2:-}"
 window_id="${TMUX_PANE:+$(tmux display-message -p -t "$TMUX_PANE" '#{window_id}')}"
 [ -n "$window_id" ] || exit 0
+set_window_agent "$window_id" opencode
 
 pane_summary() {
   local output result summary

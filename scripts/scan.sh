@@ -10,6 +10,7 @@ while IFS='|' read -r window_id pane_id command dead path; do
 
   if [ "$dead" = 1 ] && is_agent_command "$command"; then
     agent_windows["$window_id"]=1
+    set_window_agent "$window_id" "$command"
     set_window_state "$window_id" failed 'process exited' process
     continue
   fi
@@ -19,6 +20,7 @@ while IFS='|' read -r window_id pane_id command dead path; do
   fi
 
   agent_windows["$window_id"]=1
+  set_window_agent "$window_id" "$command"
   set_window_git_context "$window_id" "$path"
   output="$(tmux capture-pane -p -t "$pane_id" -S -200 2>/dev/null || true)"
   result="$(classify_output "$command" "$output")"

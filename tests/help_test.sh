@@ -51,6 +51,7 @@ for expected in \
   'm      zoom' \
   'w      open the grouped workspace navigator' \
   's      open the compact session navigator' \
+  'O      customise Drudwyn options' \
   's      save all sessions with tmux-resurrect' \
   'C-s    save all sessions (tmux-resurrect)' \
   'C-w    open the native tmux window tree' \
@@ -59,7 +60,7 @@ for expected in \
   'right  managed agents' \
   'CLEAN  no uncommitted changes' \
   'DIRTY  has uncommitted changes' \
-  'Press q or Escape to close.'
+  '[q/Esc] Close'
 do
   printf '%s\n' "$help_output" | grep -Fq "$expected" || {
     printf 'not ok: help output missing %s\n' "$expected"

@@ -39,8 +39,8 @@ if [ -n "$sidebar" ]; then
       leftmost="$(tmux list-panes -t "$target_window" -F '#{pane_id}|#{pane_left}' |
         awk -F '|' '$2 == 0 { print $1; exit }')"
       [ -n "$leftmost" ] && tmux swap-pane -d -s "$sidebar" -t "$leftmost"
-      tmux resize-pane -t "$sidebar" -x "$width" 2>/dev/null || true
     fi
+    tmux resize-pane -t "$sidebar" -x "$width" 2>/dev/null || true
     exit 0
   fi
   [ "$target_pane" = "$sidebar" ] && exit 0
